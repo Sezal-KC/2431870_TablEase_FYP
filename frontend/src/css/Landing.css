@@ -1,0 +1,268 @@
+/* Landing.css */
+
+/* Reset & Global */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(to bottom, #fff7e9, #ffffff);
+  color: #333;
+  min-height: 100vh;
+}
+
+/* Container for centering */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Hero Section */
+.hero {
+  background: linear-gradient(to right, #fff7e9, #ffe8d6, #fff7e9);
+  padding: 100px 0;
+  text-align: center;
+}
+
+.hero-logo {
+  display: block; /* Important for centering */
+  width: 180px;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 10px 20px rgba(255, 140, 66, 0.3);
+  margin: 0 auto 40px; /* Centers the image */
+}
+
+.hero-title {
+  font-size: 4.5rem;
+  font-weight: 900;
+  color: #ff8c42;
+  margin-bottom: 20px;
+}
+
+.hero-subtitle {
+  font-size: 1.8rem;
+  color: #555;
+  margin-bottom: 50px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 18px 50px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #ff8c42, #ff5f1f);
+  color: white;
+  box-shadow: 0 8px 20px rgba(255, 95, 31, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 30px rgba(255, 95, 31, 0.5);
+}
+
+.btn-secondary {
+  background: white;
+  color: #ff8c42;
+  border: 3px solid #ff8c42;
+}
+
+.btn-secondary:hover {
+  background: #fff7e9;
+  transform: translateY(-3px);
+}
+
+/* About Section */
+.about {
+  padding: 100px 0;
+  background: white;
+  text-align: center;
+}
+
+.about h2 {
+  font-size: 3.5rem;
+  color: #ff8c42;
+  margin-bottom: 40px;
+}
+
+.about p {
+  font-size: 1.3rem;
+  color: #555;
+  line-height: 1.8;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Features Section */
+.features {
+  padding: 100px 0;
+  background: #fff7e9;
+}
+
+.features h2 {
+  font-size: 3.5rem;
+  color: #ff8c42;
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 40px;
+  padding: 0 20px;
+}
+
+.feature-card {
+  background: white;
+  padding: 50px 30px;
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(255, 140, 66, 0.15);
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 1px solid #ffe8d6;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 20px 40px rgba(255, 140, 66, 0.25);
+}
+
+.feature-icon {
+  width: 90px;
+  height: 90px;
+  background: #fff0d9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 30px;
+  font-size: 3.5rem;
+  box-shadow: 0 5px 15px rgba(255, 140, 66, 0.2);
+}
+
+.feature-title {
+  font-size: 1.8rem;
+  color: #ff8c42;
+  margin-bottom: 20px;
+}
+
+.feature-desc {
+  font-size: 1.1rem;
+  color: #666;
+  line-height: 1.7;
+}
+
+/* Contact Section */
+.contact {
+  padding: 100px 0;
+  background: white;
+  text-align: center;
+}
+
+.contact h2 {
+  font-size: 3.5rem;
+  color: #ff8c42;
+  margin-bottom: 40px;
+}
+
+.contact-text {
+  font-size: 1.3rem;
+  color: #555;
+  margin-bottom: 50px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.contact-info {
+  display: flex;
+  justify-content: center;
+  gap: 80px;
+  flex-wrap: wrap;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 1.4rem;
+}
+
+.contact-icon {
+  font-size: 4rem;
+  color: orange;
+}
+
+.contact-item p {
+  margin: 0;
+}
+
+.contact-item a {
+  color: #ff8c42;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.contact-item a:hover {
+  text-decoration: underline;
+}
+
+/* CTA Section */
+.cta {
+  padding: 100px 0;
+  background: linear-gradient(to right, #fff7e9, #ffe8d6);
+  text-align: center;
+}
+
+.cta h2 {
+  font-size: 3.5rem;
+  color: #ff8c42;
+  margin-bottom: 30px;
+}
+
+.cta p {
+  font-size: 1.4rem;
+  color: #555;
+  margin-bottom: 50px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+/* Footer */
+footer {
+  padding: 60px 0;
+  background: #333;
+  color: #ddd;
+  text-align: center;
+  font-size: 1.2rem;
+}

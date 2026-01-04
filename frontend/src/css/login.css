@@ -1,0 +1,139 @@
+/* login.css - Ultra-compact, non-scrollable login form with px units */
+
+.auth-container {
+  height: 100vh;                    /* full viewport height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
+              url('../images/login-bg.jpg') center/cover no-repeat fixed;
+  padding: 10px;                    /* reduced padding */
+}
+
+/* Login card - even smaller height */
+.auth-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;              /* slightly smaller radius */
+  padding: 30px 30px;               /* reduced top/bottom padding */
+  width: 100%;
+  max-width: 400px;                 /* narrower card */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-align: center;
+}
+
+/* Heading - smaller */
+.auth-card h1 {
+  font-size: 30px;                  /* even smaller */
+  font-weight: 800;
+  color: #ff8c42;
+  margin-bottom: 25px;
+}
+
+/* Form group - tighter spacing */
+.form-group {
+  margin-bottom: 16px;              /* reduced */
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  font-size: 16px;                  /* smaller label */
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 5px;
+}
+
+/* Inputs & Select - compact */
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;               /* smaller padding */
+  font-size: 14px;                  /* smaller text */
+  border: 2px solid #ffd56f;
+  border-radius: 8px;
+  background: rgba(255, 250, 240, 0.9);
+  transition: all 0.3s ease;
+  color: #333;
+}
+
+.form-group input::placeholder {
+  color: #b8a89a;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #ff8c42;
+  box-shadow: 0 0 6px rgba(255, 140, 66, 0.2);
+  outline: none;
+}
+
+/* Password show/hide */
+.password-group {
+  position: relative;
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #ff8c42;
+  font-size: 13px;                  /* smaller */
+  cursor: pointer;
+}
+
+.toggle-btn:hover {
+  color: #ff5f1f;
+}
+
+/* Submit Button - compact */
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  background: linear-gradient(135deg, #ff8c42, #ff5f1f);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;                  /* smaller button text */
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 15px rgba(255, 95, 31, 0.3);
+}
+
+.submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(255, 95, 31, 0.4);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Switch link - smaller */
+.switch-link {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #555;
+}
+
+.switch-link a {
+  color: #ff8c42;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.switch-link a:hover {
+  color: #ff5f1f;
+  text-decoration: underline;
+}
