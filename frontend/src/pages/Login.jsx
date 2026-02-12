@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { handleError, handleSuccess } from '../utils';
-import '../css/login.css';  // Your CSS file
+import '../css/login.css';  
 
-function Login() {
+function Login({ setAuth }) {
   const [loginInfo, setLoginInfo] = useState({ email: '', password: '', role: '' });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -36,11 +36,28 @@ function Login() {
       const { success, message, jwtToken, name, error } = result;
 
       if (success) {
+
+        // List of allowed roles (must match your backend)
+        const allowedRoles = ['waiter', 'cashier', 'manager', 'admin', 'kitchen_staff'];
+
+        if (!allowedRoles.includes(role)) {
+          handleError('Invalid role selected. Please choose a valid role.');
+          return; // Stop here — do NOT save token or redirect
+        }
+
+        // Only proceed if role is valid
         handleSuccess(message || 'Login successful!');
         localStorage.setItem('token', jwtToken);
         localStorage.setItem('loggedInUser', name);
         localStorage.setItem('userRole', role);
-        setTimeout(() => navigate('/dashboard', { replace: true }), 1000);
+
+        setAuth(true);
+
+
+        // Redirect to role-specific dashboard
+        const dashboardPath = `/${role}-dashboard`;
+        setTimeout(() => navigate(dashboardPath, { replace: true }), 1000);
+        
       } else {
         const errorMsg = error?.details?.[0]?.message || error?.message || message || 'Login failed';
         handleError(errorMsg);

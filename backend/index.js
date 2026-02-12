@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const AuthRouter = require('./Routes/AuthRouter');
+const tableRoutes = require('./Routes/tableRoutes'); 
 
 require('dotenv').config(); // loading .env file 
 require('./Models/db');     // connect to the database file
@@ -22,6 +23,8 @@ app.use(cors());
 
 // all auth related routes will start with /auth
 app.use('/auth', AuthRouter);  
+app.use('/api/tables', tableRoutes);
+
 
 // server start
 app.listen(PORT, () => {

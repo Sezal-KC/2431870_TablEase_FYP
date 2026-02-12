@@ -3,9 +3,12 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard'; 
+import WaiterDashboard from './pages/WaiterDashboard'; //
 import RefreshHandler from './RefreshHandler';
 import './App.css';
+import VerifyEmail from './pages/VerifyEmail';
+import NewOrder from './pages/NewOrder';
+
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -24,18 +27,29 @@ function App() {
         <Route path="/login" element={<Login setAuth={setIsAuthenticated} />} />
         <Route path="/signup" element={<Signup />} />
 
-        {/* Protected dashboard – role-based content */}
+        {/* Role-specific protected routes */}
         <Route
-          path="/dashboard"
+          path="/waiter-dashboard"
           element={
             <PrivateRoute>
-              <Dashboard />
+              <WaiterDashboard />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/new-order/:tableNumber"
+          element={
+            <PrivateRoute>
+              <NewOrder />
             </PrivateRoute>
           }
         />
 
         {/* Redirect unknown paths to landing */}
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+
       </Routes>
     </div>
   );

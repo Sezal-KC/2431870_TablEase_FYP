@@ -8,26 +8,45 @@ function RefreshHandler({ setIsAuthenticated }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const role = localStorage.getItem('userRole')?.trim().toLowerCase();
+
+
+    // List of public (unauthenticated) routes
+      const publicPaths = [ '/login', '/signup'];
 
     if (token) {
       setIsAuthenticated(true);
 
-      // List of public (unauthenticated) routes
-      const publicPaths = ['/', '/login', '/signup'];
+      // Valid roles (must match backend)
+      const validRoles = ['waiter', 'cashier', 'manager', 'admin', 'kitchen_staff'];
 
-      // Only redirect if the user is currently on a public route
-      // AND not already on dashboard (prevents loop)
-      if (
-        publicPaths.includes(location.pathname) &&
-        location.pathname !== '/dashboard'
-      ) {
-        navigate('/dashboard', { replace: true });
+      // If role is invalid or missing → treat as unauthenticated
+      if (!role || !validRoles.includes(role)) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('loggedInUser');
+        setIsAuthenticated(false);
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      // Only redirect if on public route
+      if (publicPaths.includes(location.pathname)) {
+        const dashboardPath = `/${role}-dashboard`;
+        if (location.pathname !== dashboardPath) {
+          navigate(dashboardPath, { replace: true });
+        }
       }
     } else {
       setIsAuthenticated(false);
-    }
-  }, [location.pathname, navigate, setIsAuthenticated]); // ← Only pathname as dependency
 
+      // Protect private routes
+      if (!publicPaths.includes(location.pathname) && location.pathname !== '/') {
+        navigate('/login', { replace: true });
+      }
+    }
+  },[location.pathname, navigate, setIsAuthenticated]);
+    
   return null;
 }
 
