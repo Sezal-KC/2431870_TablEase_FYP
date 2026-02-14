@@ -4,6 +4,9 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const AuthRouter = require('./Routes/AuthRouter');
 const tableRoutes = require('./Routes/tableRoutes'); 
+const menuRoutes = require('./Routes/MenuRouter');
+const path = require ('path');
+
 
 require('dotenv').config(); // loading .env file 
 require('./Models/db');     // connect to the database file
@@ -24,6 +27,13 @@ app.use(cors());
 // all auth related routes will start with /auth
 app.use('/auth', AuthRouter);  
 app.use('/api/tables', tableRoutes);
+
+
+app.use('/api/menu', menuRoutes);
+
+app.use('/uploads', express.static('uploads'));
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 // server start
