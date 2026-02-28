@@ -12,7 +12,7 @@ function RefreshHandler({ setIsAuthenticated }) {
 
 
     // List of public (unauthenticated) routes
-      const publicPaths = [ '/login', '/signup'];
+      const publicPaths = [ '/login', '/signup', '/verify-otp', '/verify-email'];
 
     if (token) {
       setIsAuthenticated(true);

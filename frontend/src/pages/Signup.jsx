@@ -56,8 +56,13 @@ function Signup() {
       const { success, message, error } = result;
 
       if (success) {
-        handleSuccess(message || 'Signup successful! Please login.');
-        setTimeout(() => navigate('/login'), 1500);
+        handleSuccess(message || 'Signup successful! Check your email for OTP.');
+        
+        // Do NOT store token yet – wait for OTP verification
+        // Redirect to OTP verification page and pass email
+        setTimeout(() => {
+        navigate('/verify-otp', { state: { email: email.trim() } });
+        }, 1000);
       } else {
         const errorMsg = error?.details?.[0]?.message || error?.message || message || 'Signup failed';
         handleError(errorMsg);
@@ -178,7 +183,7 @@ function Signup() {
           </p>
         </form>
 
-        <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+       
       </div>
     </div>
   );

@@ -1,0 +1,119 @@
+.otp-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fdf6ec;
+}
+
+.otp-card {
+  background: white;
+  border-radius: 16px;
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.otp-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.otp-card h1 {
+  font-size: 1.8rem;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.otp-subtitle {
+  color: #555;
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.otp-hint {
+  color: #888;
+  font-size: 0.9rem;
+  margin-bottom: 32px;
+}
+
+.otp-boxes {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.otp-box {
+  width: 52px;
+  height: 60px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  font-size: 1.6rem;
+  font-weight: 600;
+  text-align: center;
+  color: #1a1a1a;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: #fafafa;
+}
+
+.otp-box:focus {
+  border-color: #f0a500;
+  box-shadow: 0 0 0 3px rgba(240, 165, 0, 0.15);
+  background: white;
+}
+
+.otp-box.filled {
+  border-color: #f0a500;
+  background: #fffbf0;
+}
+
+.verify-btn {
+  width: 100%;
+  padding: 14px;
+  background: #f0a500;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.verify-btn:hover:not(:disabled) {
+  background: #d4920a;
+  transform: translateY(-1px);
+}
+
+.verify-btn:disabled {
+  background: #ddd;
+  color: #999;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.otp-expiry {
+  color: #888;
+  font-size: 0.85rem;
+  margin-top: 20px;
+}
+
+.otp-resend {
+  margin-top: 12px;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.resend-btn {
+  background: none;
+  border: none;
+  color: #f0a500;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.9rem;
+}

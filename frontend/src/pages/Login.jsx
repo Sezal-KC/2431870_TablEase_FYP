@@ -55,8 +55,27 @@ function Login({ setAuth }) {
 
 
         // Redirect to role-specific dashboard
-        const dashboardPath = `/${role}-dashboard`;
-        setTimeout(() => navigate(dashboardPath, { replace: true }), 1000);
+        setTimeout(() => {
+          switch (role) {
+            case 'admin':
+              navigate('/admin-dashboard', { replace: true });
+              break;
+            case 'waiter':
+              navigate('/waiter-dashboard', { replace: true });
+              break;
+            case 'cashier':
+              navigate('/cashier-dashboard', { replace: true });
+              break;
+            case 'manager':
+              navigate('/manager-dashboard', { replace: true });
+              break;
+            case 'kitchen_staff':
+              navigate('/kitchen-dashboard', { replace: true });
+              break;
+            default:
+              navigate('/', { replace: true });
+          }
+        },1000)
         
       } else {
         const errorMsg = error?.details?.[0]?.message || error?.message || message || 'Login failed';
@@ -139,7 +158,7 @@ function Login({ setAuth }) {
           </p>
         </form>
 
-        <ToastContainer position="top-right" autoClose={3000} hideProgressBar />
+        
       </div>
     </div>
   );

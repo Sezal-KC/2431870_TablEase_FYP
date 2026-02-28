@@ -12,7 +12,7 @@ router.post('/login', loginValidation, login);
 // same idea for signup, validate first then run the signup logic
 router.post('/signup', signupValidation, signup);
 
-router.get('/verify-email', verifyEmail);
+router.post('/verify-email', verifyEmail);
 
 
 module.exports = router;

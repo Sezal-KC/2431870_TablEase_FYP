@@ -6,6 +6,7 @@ const AuthRouter = require('./Routes/AuthRouter');
 const tableRoutes = require('./Routes/tableRoutes'); 
 const menuRoutes = require('./Routes/MenuRouter');
 const path = require ('path');
+const adminRoutes = require('./Routes/adminRoutes');
 
 
 require('dotenv').config(); // loading .env file 
@@ -34,6 +35,8 @@ app.use('/api/menu', menuRoutes);
 app.use('/uploads', express.static('uploads'));
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.use('/api/admin', adminRoutes);
 
 
 // server start
