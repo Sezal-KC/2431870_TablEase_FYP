@@ -23,7 +23,6 @@ router.post('/', authMiddleware, async (req, res) => {
       status: 'pending'
     });
 
-    // Update table status to occupied
     await Table.findByIdAndUpdate(tableId, {
       status: 'occupied',
       currentOrder: order._id
@@ -33,6 +32,62 @@ router.post('/', authMiddleware, async (req, res) => {
   } catch (err) {
     console.error('Order error:', err);
     res.status(500).json({ success: false, message: 'Failed to place order' });
+  }
+});
+
+// GET /api/orders/table/:tableId — get active order for a table
+router.get('/table/:tableId', authMiddleware, async (req, res) => {
+  try {
+    const order = await Order.findOne({
+      table: req.params.tableId,
+      status: { $in: ['pending', 'preparing', 'ready'] }
+    }).sort({ createdAt: -1 });
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'No active order found for this table' });
+    }
+
+    res.json({ success: true, data: order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch order' });
+  }
+});
+
+// PATCH /api/orders/:orderId/add-items — add more items to existing order
+router.patch('/:orderId/add-items', authMiddleware, async (req, res) => {
+  try {
+    const { items } = req.body;
+
+    if (!items || items.length === 0) {
+      return res.status(400).json({ success: false, message: 'No items provided' });
+    }
+
+    const order = await Order.findById(req.params.orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Merge items — if item name exists increase qty, else add new
+    items.forEach(newItem => {
+      const existing = order.items.find(i => i.name === newItem.name);
+      if (existing) {
+        existing.qty += newItem.qty;
+      } else {
+        order.items.push(newItem);
+      }
+    });
+
+    // Recalculate total
+    order.totalAmount = order.items.reduce((sum, i) => sum + i.price * i.qty, 0);
+
+    // Reset to pending so kitchen sees new items
+    order.status = 'pending';
+
+    await order.save();
+
+    res.json({ success: true, message: 'Items added to order', data: order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update order' });
   }
 });
 

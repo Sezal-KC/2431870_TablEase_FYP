@@ -246,12 +246,12 @@ function WaiterDashboard() {
                   <div 
                     key={table._id} 
                     className={`table-card ${table.status}`}
-                    onClick={() => {
+                    onClick={() => {  
                       if (table.status === 'available') {
                         navigate(`/new-order/${table.tableNumber}`);
-                      } else {
-                        // Optional: show toast or alert for occupied/ordered
-                        handleSuccess(`Viewing order for ${table.tableNumber}`);
+                      } else if (table.status === 'occupied') {
+                        
+                        navigate(`/view-order/${table.tableNumber}/${table._id}`);
                       }
                     }}
                     style={{ cursor: 'pointer' }}

@@ -12,6 +12,8 @@ import AdminDashboard from './pages/AdminDashboard';
 import VerifyOTP from './pages/VerifyOTP';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ViewOrder from './pages/ViewOrder';
+
 
 
 
@@ -58,6 +60,11 @@ function App() {
               <NewOrder />
             </PrivateRoute>
           }
+        />
+
+        <Route
+          path="/view-order/:tableNumber/:tableId"
+          element={<PrivateRoute><ViewOrder /></PrivateRoute>}
         />
 
         {/* Redirect unknown paths to landing */}
