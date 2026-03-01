@@ -1,4 +1,3 @@
-// Models/Order.js
 const mongoose = require('mongoose');
 
 const OrderSchema = new mongoose.Schema({
@@ -17,9 +16,14 @@ const OrderSchema = new mongoose.Schema({
       price: Number
     }
   ],
+  allergies: [String],
+  notes: {
+    type: String,
+    default: ''
+  },
   status: {
     type: String,
-    enum: ['pending', 'preparing', 'ready', 'served'],
+    enum: ['pending', 'preparing', 'ready', 'served', 'billed', 'paid'],
     default: 'pending'
   },
   totalAmount: Number

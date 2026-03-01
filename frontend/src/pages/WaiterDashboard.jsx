@@ -258,9 +258,7 @@ function WaiterDashboard() {
                   >
                     <h3>{table.tableNumber}</h3>
                     <p>{table.seats} seats</p>
-                    {table.currentOrder && (
-                      <p className="order-id">#{table.currentOrder.id?.slice(-4) || 'N/A'}</p>
-                    )}
+                    
                     <span className="status-label">
                       {table.status.charAt(0).toUpperCase() + table.status.slice(1)}
                     </span>
