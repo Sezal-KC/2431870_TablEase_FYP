@@ -28,6 +28,19 @@ function WaiterDashboard() {
   const [loadingTables, setLoadingTables] = useState(false);
   const [tableError, setTableError] = useState(null);
 
+  const [stats, setStats] = useState({
+  todaysRevenue: 0,
+  ordersToday: 0,
+  activeTables: '0/0',
+  avgOrderValue: 0,
+  availableTables: 0,
+  occupiedTables: 0
+  });
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  const [alerts, setAlerts] = useState([]);
+
   const handleLogout = () => {
     localStorage.clear();
     navigate('/login', { replace: true });
@@ -40,6 +53,7 @@ function WaiterDashboard() {
 
     socket.on('orderReady', (data) => {
       handleSuccess(`🍽️ ${data.message}`);
+      setAlerts(prev => [`🍽️ ${data.message}`, ...prev].slice(0, 5));
     });
 
     return () => socket.disconnect();
@@ -71,26 +85,37 @@ function WaiterDashboard() {
     }
   }, [activeTab]);
 
-  // Mock data for dashboard tab
-  const stats = {
-    todaysRevenue: 2560,
-    ordersToday: 84,
-    activeTables: '12/20',
-    avgOrderValue: 30.48,
-  };
+  // Fetch real stats
+useEffect(() => {
+  if (activeTab === 'dashboard') {
+    const fetchStats = async () => {
+      setLoadingStats(true);
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get('http://localhost:8080/api/orders/stats', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = res.data.data;
+        setStats({
+          todaysRevenue: data.todaysRevenue,
+          ordersToday: data.ordersToday,
+          activeTables: data.activeTables,
+          avgOrderValue: data.avgOrderValue,
+          availableTables: data.availableTables,
+          occupiedTables: data.occupiedTables
+        });
+        setRecentOrders(data.recentOrders || []);
+      } catch (err) {
+        console.error('Stats fetch error:', err);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+    fetchStats();
+  }
+}, [activeTab]);
 
-  const recentOrders = [
-    { id: 1234, table: 'T4', status: 'Preparing', amount: 71.45, time: '5 min ago' },
-    { id: 1235, table: 'T3', status: 'Ready', amount: 68.16, time: '10 min ago' },
-    { id: 1236, table: 'T5', status: 'Pending', amount: 45.99, time: '3 min ago' },
-    { id: 1237, table: 'T8', status: 'Preparing', amount: 59.36, time: '15 min ago' },
-  ];
 
-  const alerts = [
-    'Table T4 waiting for 12 minutes',
-    '3 items low in stock',
-    'Kitchen order #1234 taking longer than usual',
-  ];
 
   // Switch to Orders tab on "New Order" click
   const handleNewOrder = () => {
@@ -166,7 +191,7 @@ function WaiterDashboard() {
               </div>
               <div className="stat-card avg">
                 <h3>Avg Order Value</h3>
-                <p className="value">Rs. {stats.avgOrderValue.toLocaleString()}</p>
+                <p className="value">Rs. {stats.avgOrderValue.toFixed(0)}</p>
               </div>
             </div>
 
@@ -184,18 +209,21 @@ function WaiterDashboard() {
                       <th>Time</th>
                     </tr>
                   </thead>
+                  
                   <tbody>
-                    {recentOrders.map((order) => (
-                      <tr key={order.id}>
-                        <td>#{order.id}</td>
-                        <td>{order.table}</td>
-                        <td className={`status ${order.status.toLowerCase()}`}>
-                          {order.status}
-                        </td>
-                        <td>Rs. {order.amount.toLocaleString()}</td>
-                        <td>{order.time}</td>
-                      </tr>
-                    ))}
+                    {recentOrders.length === 0 ? (
+                      <tr><td colSpan="5" style={{ textAlign: 'center', color: '#888' }}>No orders yet today</td></tr>
+                    ) : (
+                      recentOrders.map((order) => (
+                        <tr key={order._id}>
+                          <td>#{order._id.slice(-4)}</td>
+                          <td>{order.table?.tableNumber || 'N/A'}</td>
+                          <td className={`status ${order.status}`}>{order.status}</td>
+                          <td>Rs. {order.totalAmount?.toLocaleString()}</td>
+                          <td>{new Date(order.createdAt).toLocaleTimeString()}</td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -205,11 +233,13 @@ function WaiterDashboard() {
             <div className="side-panels">
               <div className="alerts-panel">
                 <h2>Alerts</h2>
-                {alerts.map((alert, i) => (
-                  <div key={i} className="alert-item">
-                    {alert}
-                  </div>
-                ))}
+                {alerts.length === 0 ? (
+                  <div className="alert-item">No alerts right now</div>
+                ) : (
+                  alerts.map((alert, i) => (
+                    <div key={i} className="alert-item">{alert}</div>
+                  ))
+                )}
               </div>
 
               <div className="quick-actions">
@@ -233,15 +263,15 @@ function WaiterDashboard() {
             <div className="table-stats">
               <div className="stat-box available">
                 <h3>Available Tables</h3>
-                <p className="big-number">7</p>
+                <p className="big-number">{stats.availableTables}</p>
               </div>
               <div className="stat-box occupied">
                 <h3>Occupied Tables</h3>
-                <p className="big-number">3</p>
+                <p className="big-number">{stats.occupiedTables}</p>
               </div>
               <div className="stat-box ordered">
-                <h3>Orders Placed</h3>
-                <p className="big-number">2</p>
+                <h3>Total Tables</h3>
+                <p className="big-number">{stats.availableTables + stats.occupiedTables}</p>
               </div>
             </div>
 

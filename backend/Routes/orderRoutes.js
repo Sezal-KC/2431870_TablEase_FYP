@@ -140,4 +140,62 @@ router.patch('/:orderId/status', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/orders/stats — waiter dashboard stats
+router.get('/stats', authMiddleware, async (req, res) => {
+  try {
+    // Today's date range
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    // Today's orders
+    const todaysOrders = await Order.find({
+      createdAt: { $gte: todayStart, $lte: todayEnd }
+    }).populate('table', 'tableNumber');
+
+    // Revenue from paid/billed orders today
+    const todaysRevenue = todaysOrders
+      .filter(o => ['billed', 'paid'].includes(o.status))
+      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+
+    // Orders count today
+    const ordersToday = todaysOrders.length;
+
+    // Avg order value
+    const avgOrderValue = ordersToday > 0
+      ? todaysOrders.reduce((sum, o) => sum + (o.totalAmount || 0), 0) / ordersToday
+      : 0;
+
+    // Table stats
+    const allTables = await Table.find({});
+    const availableTables = allTables.filter(t => t.status === 'available').length;
+    const occupiedTables = allTables.filter(t => t.status === 'occupied').length;
+    const totalTables = allTables.length;
+
+    // Recent 5 orders
+    const recentOrders = await Order.find({})
+      .populate('table', 'tableNumber')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.json({
+      success: true,
+      data: {
+        todaysRevenue,
+        ordersToday,
+        avgOrderValue,
+        activeTables: `${occupiedTables}/${totalTables}`,
+        availableTables,
+        occupiedTables,
+        totalTables,
+        recentOrders
+      }
+    });
+  } catch (err) {
+    console.error('Stats error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch stats' });
+  }
+});
+
 module.exports = router;
