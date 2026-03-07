@@ -1,48 +1,54 @@
 const express = require('express');
 const app = express();
+const http = require('http');
+const { Server } = require('socket.io');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const AuthRouter = require('./Routes/AuthRouter');
-const tableRoutes = require('./Routes/tableRoutes'); 
+const tableRoutes = require('./Routes/tableRoutes');
 const menuRoutes = require('./Routes/MenuRouter');
-const path = require ('path');
+const path = require('path');
 const adminRoutes = require('./Routes/adminRoutes');
 const orderRoutes = require('./Routes/orderRoutes');
 
-
-require('dotenv').config(); // loading .env file 
-require('./Models/db');     // connect to the database file
+require('dotenv').config();
+require('./Models/db');
 
 const PORT = process.env.PORT || 8080;
 
-// small test  just to check server is alive
-app.get('/ping', (req, res) => {
-  res.send('PONG');
+// Create HTTP server and Socket.io
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST', 'PATCH', 'DELETE']
+  }
 });
 
-//  read JSON body sent from frontend
-app.use(bodyParser.json());
+// Make io accessible in routes
+app.set('io', io);
 
-// allow the server to accept requests from other origins
+io.on('connection', (socket) => {
+  console.log('Client connected:', socket.id);
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
+app.get('/ping', (req, res) => res.send('PONG'));
+
+app.use(bodyParser.json());
 app.use(cors());
 
-// all auth related routes will start with /auth
-app.use('/auth', AuthRouter);  
+app.use('/auth', AuthRouter);
 app.use('/api/tables', tableRoutes);
-
-
 app.use('/api/menu', menuRoutes);
-
 app.use('/uploads', express.static('uploads'));
-
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 app.use('/api/admin', adminRoutes);
-
 app.use('/api/orders', orderRoutes);
 
-
-// server start
-app.listen(PORT, () => {
+// Use server.listen instead of app.listen
+server.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
 });

@@ -13,6 +13,7 @@ import VerifyOTP from './pages/VerifyOTP';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ViewOrder from './pages/ViewOrder';
+import KitchenDashboard from './pages/KitchenDashboard';
 
 
 
@@ -69,6 +70,11 @@ function App() {
 
         {/* Redirect unknown paths to landing */}
         <Route path="*" element={<Navigate to="/" replace />} />
+
+        <Route
+          path="/kitchen-dashboard"
+          element={<PrivateRoute><KitchenDashboard /></PrivateRoute>}
+        />
         
 
        

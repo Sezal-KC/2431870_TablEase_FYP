@@ -1,11 +1,12 @@
 
-
 // src/pages/WaiterDashboard.jsx
 import React, { useState, useEffect } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 import { handleSuccess } from '../utils';
+
 
 // React Icons
 import { 
@@ -32,6 +33,17 @@ function WaiterDashboard() {
     navigate('/login', { replace: true });
     handleSuccess('Logged out successfully');
   };
+
+  // Socket.io — listen for order ready notifications
+  useEffect(() => {
+    const socket = io('http://localhost:8080');
+
+    socket.on('orderReady', (data) => {
+      handleSuccess(`🍽️ ${data.message}`);
+    });
+
+    return () => socket.disconnect();
+  }, []);
 
   // Fetch tables when Orders tab is active
   useEffect(() => {
