@@ -198,4 +198,50 @@ router.get('/stats', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/orders/ready — orders ready to be billed
+router.get('/ready', authMiddleware, async (req, res) => {
+  try {
+    const orders = await Order.find({
+      status: 'ready'
+    })
+      .populate('table', 'tableNumber seats')
+      .sort({ createdAt: 1 });
+    res.json({ success: true, data: orders });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch ready orders' });
+  }
+});
+
+// PATCH /api/orders/:orderId/pay — mark order as paid and free table
+router.patch('/:orderId/pay', authMiddleware, async (req, res) => {
+  try {
+    const { paymentMethod } = req.body;
+
+    const order = await Order.findByIdAndUpdate(
+      req.params.orderId,
+      { status: 'paid' },
+      { new: true }
+    ).populate('table', 'tableNumber');
+
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    // Free the table
+    await Table.findByIdAndUpdate(order.table._id, {
+      status: 'available',
+      currentOrder: null
+    });
+
+    // Notify waiter via socket
+    const io = req.app.get('io');
+    io.emit('orderPaid', {
+      tableNumber: order.table.tableNumber,
+      message: `Table ${order.table.tableNumber} has been cleared and is now available`
+    });
+
+    res.json({ success: true, message: 'Payment successful', data: order });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to process payment' });
+  }
+});
+
 module.exports = router;

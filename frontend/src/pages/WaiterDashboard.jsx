@@ -56,6 +56,14 @@ function WaiterDashboard() {
       setAlerts(prev => [`🍽️ ${data.message}`, ...prev].slice(0, 5));
     });
 
+    socket.on('orderPaid', (data) => {
+      handleSuccess(`✅ ${data.message}`);
+      setAlerts(prev => [`✅ ${data.message}`, ...prev].slice(0, 5));
+      if (activeTab === 'orders') {
+        fetchTables();
+      }
+    });
+
     return () => socket.disconnect();
   }, []);
 

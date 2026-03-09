@@ -14,6 +14,8 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ViewOrder from './pages/ViewOrder';
 import KitchenDashboard from './pages/KitchenDashboard';
+import CashierDashboard from './pages/CashierDashboard';
+
 
 
 
@@ -68,18 +70,20 @@ function App() {
           element={<PrivateRoute><ViewOrder /></PrivateRoute>}
         />
 
-        {/* Redirect unknown paths to landing */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/cashier-dashboard" element={<PrivateRoute><CashierDashboard /></PrivateRoute>} />
 
         <Route
           path="/kitchen-dashboard"
           element={<PrivateRoute><KitchenDashboard /></PrivateRoute>}
         />
+
+        {/* Redirect unknown paths to landing */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+
+        
         
 
-       
-
-        
+  
 
       </Routes>
     </div>
