@@ -312,3 +312,286 @@
 
 
 .action-btn.preparing:hover { opacity: 0.85; }
+/* Kitchen Tabs */
+.kitchen-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.kitchen-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: white;
+  color: #555;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.kitchen-tab-btn.active {
+  background: #f0a500;
+  color: white;
+  border-color: #f0a500;
+}
+
+.kitchen-tab-btn:hover:not(.active) {
+  border-color: #f0a500;
+  color: #f0a500;
+}
+
+/* Recipes Layout */
+.recipes-layout {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+  height: 100%;
+}
+
+.recipes-menu-list {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  overflow-y: auto;
+  max-height: 75vh;
+}
+
+.recipes-menu-list h2 {
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.recipes-hint {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin-bottom: 16px;
+}
+
+.recipes-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recipe-menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #eee;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fafafa;
+}
+
+.recipe-menu-item:hover { border-color: #f0a500; background: #fff8f0; }
+.recipe-menu-item.selected { border-color: #f0a500; background: #fff3e0; }
+
+.recipe-item-info { display: flex; flex-direction: column; gap: 2px; }
+.recipe-item-name { font-size: 0.9rem; font-weight: 600; color: #333; }
+.recipe-item-category { font-size: 0.75rem; color: #888; }
+
+.recipe-item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recipe-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.recipe-badge.has-recipe { background: #d4edda; color: #155724; }
+.recipe-badge.no-recipe { background: #fff3cd; color: #856404; }
+
+.btn-delete-recipe {
+  background: #fdecea;
+  border: none;
+  color: #e74c3c;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-delete-recipe:hover { background: #e74c3c; color: white; }
+
+/* Recipe Builder */
+.recipe-builder {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+}
+
+.recipe-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #aaa;
+  gap: 12px;
+  font-size: 0.95rem;
+}
+.recipe-empty span { font-size: 2.5rem; }
+
+.recipe-builder-header {
+  margin-bottom: 20px;
+}
+.recipe-builder-header h2 { font-size: 1.1rem; color: #333; }
+.recipe-builder-header h2 span { color: #f0a500; }
+.recipe-builder-header p { font-size: 0.82rem; color: #888; margin-top: 4px; }
+
+.recipe-ingredients {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.recipe-no-ingredients {
+  color: #aaa;
+  font-size: 0.88rem;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.recipe-ingredient-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.recipe-ingredient-row select,
+.recipe-ingredient-row input {
+  padding: 9px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.recipe-ingredient-row select:focus,
+.recipe-ingredient-row input:focus { border-color: #f0a500; }
+
+.recipe-ingredient-row select:first-child { flex: 2; }
+.recipe-ingredient-row input { flex: 1; }
+.recipe-ingredient-row select:last-of-type { width: 80px; }
+
+.btn-remove-ingredient {
+  background: #fdecea;
+  border: none;
+  color: #e74c3c;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.btn-remove-ingredient:hover { background: #e74c3c; color: white; }
+
+.btn-add-ingredient {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #f5f5f5;
+  border: 1.5px dashed #ddd;
+  border-radius: 8px;
+  color: #555;
+  font-size: 0.88rem;
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 16px;
+  transition: all 0.2s;
+}
+.btn-add-ingredient:hover { border-color: #f0a500; color: #f0a500; background: #fff8f0; }
+
+.btn-save-recipe {
+  width: 100%;
+  padding: 14px;
+  background: #f0a500;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-save-recipe:hover:not(:disabled) { background: #d4920a; }
+.btn-save-recipe:disabled { background: #ddd; color: #999; cursor: not-allowed; }
+
+.ingredient-search-wrap {
+  flex: 2;
+  position: relative;
+}
+
+.ingredient-search-wrap input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.ingredient-search-wrap input:focus { border-color: #f0a500; }
+.ingredient-search-wrap input.selected-ingredient { border-color: #27ae60; background: #f0fff4; }
+
+.ingredient-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  z-index: 100;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.ingredient-option {
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  cursor: pointer;
+  color: #333;
+  transition: background 0.15s;
+}
+
+.ingredient-option:hover { background: #fff8f0; }
+
+.ingredient-option .ing-unit {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.ingredient-option.create-new {
+  color: #f0a500;
+  font-weight: 600;
+  border-top: 1px solid #eee;
+}
+
+.ingredient-option.create-new:hover { background: #fff3e0; }
+.ingredient-option.disabled { color: #aaa; cursor: default; }
