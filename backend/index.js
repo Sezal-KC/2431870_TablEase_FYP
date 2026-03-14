@@ -10,6 +10,8 @@ const menuRoutes = require('./Routes/MenuRouter');
 const path = require('path');
 const adminRoutes = require('./Routes/adminRoutes');
 const orderRoutes = require('./Routes/orderRoutes');
+const inventoryRoutes = require('./Routes/inventoryRoutes');
+
 
 require('dotenv').config();
 require('./Models/db');
@@ -47,6 +49,8 @@ app.use('/uploads', express.static('uploads'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/admin', adminRoutes);
 app.use('/api/orders', orderRoutes);
+
+app.use('/api/inventory', inventoryRoutes);
 
 // Use server.listen instead of app.listen
 server.listen(PORT, () => {

@@ -3,6 +3,9 @@ const router = express.Router();
 const authMiddleware = require('../Middlewares/auth');
 const Order = require('../Models/Order');
 const Table = require('../Models/Table');
+const Recipe = require('../Models/Recipe');
+const Ingredient = require('../Models/Ingredient');
+const MenuItem = require('../Models/MenuItem');
 
 // POST /api/orders — place a new order
 router.post('/', authMiddleware, async (req, res) => {
@@ -27,6 +30,36 @@ router.post('/', authMiddleware, async (req, res) => {
       status: 'occupied',
       currentOrder: order._id
     });
+
+    // Auto-deduct ingredients for each ordered item
+    for (const orderedItem of items) {
+      const menuItem = await MenuItem.findOne({ name: orderedItem.name });
+      if (!menuItem) continue;
+
+      const recipe = await Recipe.findOne({ menuItem: menuItem._id })
+        .populate('ingredients.ingredient');
+      if (!recipe) continue;
+
+      for (const recipeIngredient of recipe.ingredients) {
+        const deductAmount = recipeIngredient.quantity * orderedItem.qty;
+        await Ingredient.findByIdAndUpdate(
+          recipeIngredient.ingredient._id,
+          { $inc: { currentStock: -deductAmount } }
+        );
+
+        // Check low stock and emit alert
+        const updated = await Ingredient.findById(recipeIngredient.ingredient._id);
+        if (updated.currentStock <= updated.lowStockThreshold) {
+          const io = req.app.get('io');
+          io.emit('lowStock', {
+            ingredient: updated.name,
+            currentStock: updated.currentStock,
+            unit: updated.unit,
+            message: `⚠️ Low stock: ${updated.name} (${updated.currentStock}${updated.unit} remaining)`
+          });
+        }
+      }
+    }
 
     res.status(201).json({ success: true, message: 'Order placed successfully', data: order });
   } catch (err) {
