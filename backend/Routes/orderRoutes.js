@@ -277,4 +277,63 @@ router.patch('/:orderId/pay', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/orders/sales-report — manager sales data
+router.get('/sales-report', authMiddleware, async (req, res) => {
+  try {
+    const { period } = req.query; // 'today', 'week', 'month'
+
+    let startDate = new Date();
+    if (period === 'week') {
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (period === 'month') {
+      startDate.setDate(startDate.getDate() - 30);
+    } else {
+      startDate.setHours(0, 0, 0, 0);
+    }
+
+    const orders = await Order.find({
+      createdAt: { $gte: startDate },
+      status: { $in: ['paid', 'billed'] }
+    }).populate('table', 'tableNumber');
+
+    // Total revenue
+    const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+
+    // Orders per day for chart
+    const dailyMap = {};
+    orders.forEach(order => {
+      const day = new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      if (!dailyMap[day]) dailyMap[day] = { date: day, revenue: 0, orders: 0 };
+      dailyMap[day].revenue += order.totalAmount || 0;
+      dailyMap[day].orders += 1;
+    });
+    const dailyData = Object.values(dailyMap).slice(-7);
+
+    // Popular items
+    const itemMap = {};
+    orders.forEach(order => {
+      order.items.forEach(item => {
+        if (!itemMap[item.name]) itemMap[item.name] = { name: item.name, qty: 0, revenue: 0 };
+        itemMap[item.name].qty += item.qty;
+        itemMap[item.name].revenue += item.price * item.qty;
+      });
+    });
+    const popularItems = Object.values(itemMap)
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, 5);
+
+    res.json({
+      success: true,
+      data: {
+        totalRevenue,
+        totalOrders: orders.length,
+        dailyData,
+        popularItems
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to fetch sales report' });
+  }
+});
+
 module.exports = router;

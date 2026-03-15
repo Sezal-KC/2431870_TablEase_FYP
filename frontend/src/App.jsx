@@ -15,6 +15,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import ViewOrder from './pages/ViewOrder';
 import KitchenDashboard from './pages/KitchenDashboard';
 import CashierDashboard from './pages/CashierDashboard';
+import ManagerDashboard from './pages/ManagerDashboard';
 
 
 
@@ -76,6 +77,8 @@ function App() {
           path="/kitchen-dashboard"
           element={<PrivateRoute><KitchenDashboard /></PrivateRoute>}
         />
+
+        <Route path="/manager-dashboard" element={<PrivateRoute><ManagerDashboard /></PrivateRoute>} />
 
         {/* Redirect unknown paths to landing */}
         <Route path="*" element={<Navigate to="/" replace />} />
