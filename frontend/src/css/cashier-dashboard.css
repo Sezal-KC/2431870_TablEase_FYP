@@ -423,4 +423,69 @@
   cursor: pointer;
   transition: background 0.2s;
 }
-.receipt-close-btn:hover { background: #e07b3a; }
+.receipt-close-btn:hover { background: #e07b3a; }.esewa-section {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  text-align: center;
+}
+
+.esewa-logo {
+  height: 40px;
+  margin-bottom: 12px;
+}
+
+.esewa-info p {
+  color: #555;
+  font-size: 0.92rem;
+  margin-bottom: 8px;
+}
+
+.esewa-note {
+  color: #888;
+  font-size: 0.82rem !important;
+}
+
+.esewa-test-creds {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 12px 0;
+  text-align: left;
+  font-size: 0.82rem;
+  color: #555;
+}
+
+.esewa-test-creds p { margin: 4px 0; }
+
+.esewa-pay-btn {
+  width: 100%;
+  padding: 14px;
+  background: #60bb46;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.esewa-pay-btn:hover { background: #4da336; }
+
+.qr-esewa-info {
+  text-align: center;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.qr-esewa-info p {
+  font-size: 0.88rem;
+  color: #555;
+}
+

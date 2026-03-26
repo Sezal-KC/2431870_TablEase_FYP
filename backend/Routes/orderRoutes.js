@@ -27,7 +27,7 @@ router.post('/', authMiddleware, async (req, res) => {
     });
 
     await Table.findByIdAndUpdate(tableId, {
-      status: 'occupied',
+      status: 'ordered',
       currentOrder: order._id
     });
 

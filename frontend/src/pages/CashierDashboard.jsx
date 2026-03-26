@@ -3,8 +3,12 @@ import axios from 'axios';
 import { handleSuccess, handleError } from '../utils';
 import { MdLogout, MdRefresh, MdClose, MdCheck } from 'react-icons/md';
 import '../css/cashier-dashboard.css';
+import CryptoJS from 'crypto-js';
 
 const API = 'http://localhost:8080';
+const ESEWA_SECRET = '8gBm/:&EnhH.1/q';
+const ESEWA_PRODUCT_CODE = 'EPAYTEST';
+const ESEWA_URL = 'https://rc-epay.esewa.com.np/api/epay/main/v2/form';
 
 function CashierDashboard() {
   const [orders, setOrders] = useState([]);
@@ -84,6 +88,61 @@ function CashierDashboard() {
       setProcessing(false);
     }
   };
+
+  const handleEsewaPayment = () => {
+    if (!selectedOrder) return;
+
+    // Generate clean UUID - date format like eSewa docs show
+    const now = new Date();
+    const transactionUuid = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}-${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}${String(now.getSeconds()).padStart(2,'0')}`;
+    
+    // eSewa requires: total_amount = amount + tax_amount + service + delivery
+    // We send full amount as "amount" and 0 for tax to keep it simple
+    const totalAmt = netAmount.toFixed(2);
+
+    // Generate HMAC SHA256 signature
+    const message = `total_amount=${totalAmt},transaction_uuid=${transactionUuid},product_code=${ESEWA_PRODUCT_CODE}`;
+    const signature = CryptoJS.HmacSHA256(message, ESEWA_SECRET).toString(CryptoJS.enc.Base64);
+
+    // Store order info for verification after redirect
+    localStorage.setItem('pendingEsewaPayment', JSON.stringify({
+      orderId: selectedOrder._id,
+      transactionUuid,
+      amount: netAmount
+    }));
+
+    // Create and submit form to eSewa
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = ESEWA_URL;
+
+    const fields = {
+      amount: totalAmt,        // ← full amount here
+      tax_amount: '0',         // ← 0 tax (VAT already included in price)
+      total_amount: totalAmt,  // ← must equal amount + tax + service + delivery
+      transaction_uuid: transactionUuid,
+      product_code: ESEWA_PRODUCT_CODE,
+      product_service_charge: '0',
+      product_delivery_charge: '0',
+      success_url: 'http://localhost:5173/esewa/success',
+      failure_url: 'http://localhost:5173/esewa/failure',
+      signed_field_names: 'total_amount,transaction_uuid,product_code',
+      signature
+    };
+
+    Object.entries(fields).forEach(([key, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    
+    form.submit();
+  };
+
 
   return (
     <div className="cashier-layout">
@@ -222,6 +281,12 @@ function CashierDashboard() {
                   >
                     📱 QR Pay
                   </button>
+                  <button
+                    className={`method-btn ${paymentMethod === 'esewa' ? 'active' : ''}`}
+                    onClick={() => setPaymentMethod('esewa')}
+                  >
+                    🟢 eSewa
+                  </button>
                 </div>
               </div>
 
@@ -253,29 +318,63 @@ function CashierDashboard() {
               {paymentMethod === 'qr' && (
                 <div className="qr-section">
                   <p className="qr-instruction">
-                    Scan QR code to pay <strong>Rs. {netAmount.toFixed(2)}</strong>
+                    Scan to pay <strong>Rs. {netAmount.toFixed(2)}</strong> via eSewa
                   </p>
                   <div className="qr-code">
                     <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=TablEase-Payment-Rs${netAmount.toFixed(2)}-Table${selectedOrder.table?.tableNumber}`}
-                      alt="QR Code"
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://esewa.com.np`}
+                      alt="eSewa QR Code"
                     />
                   </div>
-                  <p className="qr-note">After customer scans and pays, click confirm below</p>
+                  <div className="qr-esewa-info">
+                    <img
+                      src="https://esewa.com.np/common/images/esewa_logo.png"
+                      alt="eSewa"
+                      style={{ height: '28px', marginBottom: '8px' }}
+                      onError={e => { e.target.style.display = 'none'; }}
+                    />
+                    <p>Scan with eSewa app to pay</p>
+                    <p className="qr-note">After customer pays, click confirm below</p>
+                  </div>
                 </div>
               )}
 
-              {/* Confirm Payment */}
-              <button
-                className="confirm-payment-btn"
-                onClick={handlePayment}
-                disabled={
-                  processing ||
-                  (paymentMethod === 'cash' && (!cashReceived || parseFloat(cashReceived) < netAmount))
-                }
-              >
-                {processing ? 'Processing...' : <><MdCheck size={18} /> Confirm Payment</>}
-              </button>
+              {/* eSewa Payment */}
+              {paymentMethod === 'esewa' && (
+                <div className="esewa-section">
+                  <img
+                    src="https://esewa.com.np/common/images/esewa_logo.png"
+                    alt="eSewa"
+                    className="esewa-logo"
+                    onError={e => { e.target.style.display = 'none'; }}
+                  />
+                  <p>Pay <strong>Rs. {netAmount.toFixed(2)}</strong> via eSewa</p>
+                  <p className="esewa-note">Customer will be redirected to eSewa to complete payment</p>
+                  <div className="esewa-test-creds">
+                    <p><strong>Test Credentials:</strong></p>
+                    <p>eSewa ID: 9806800001</p>
+                    <p>Password: Nepal@123</p>
+                    <p>Token: 123456</p>
+                  </div>
+                  <button className="esewa-pay-btn" onClick={handleEsewaPayment}>
+                    Pay with eSewa →
+                  </button>
+                </div>
+              )}
+
+              {/* Confirm Payment — hidden for eSewa */}
+              {paymentMethod !== 'esewa' && (
+                <button
+                  className="confirm-payment-btn"
+                  onClick={handlePayment}
+                  disabled={
+                    processing ||
+                    (paymentMethod === 'cash' && (!cashReceived || parseFloat(cashReceived) < netAmount))
+                  }
+                >
+                  {processing ? 'Processing...' : <><MdCheck size={18} /> Confirm Payment</>}
+                </button>
+              )}
             </>
           )}
         </div>
@@ -292,7 +391,10 @@ function CashierDashboard() {
             <div className="receipt-body">
               <p><strong>Table:</strong> {paidOrder.table?.tableNumber}</p>
               <p><strong>Time:</strong> {new Date().toLocaleString()}</p>
-              <p><strong>Payment:</strong> {paidOrder.paymentMethod === 'cash' ? '💵 Cash' : '📱 QR Pay'}</p>
+              <p><strong>Payment:</strong> {
+                paidOrder.paymentMethod === 'cash' ? '💵 Cash' :
+                paidOrder.paymentMethod === 'esewa' ? '🟢 eSewa' : '📱 QR Pay'
+              }</p>
               <div className="receipt-divider" />
               {paidOrder.items.map((item, i) => (
                 <div key={i} className="receipt-item">

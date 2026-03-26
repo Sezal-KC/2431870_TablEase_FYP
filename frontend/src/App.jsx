@@ -16,6 +16,8 @@ import ViewOrder from './pages/ViewOrder';
 import KitchenDashboard from './pages/KitchenDashboard';
 import CashierDashboard from './pages/CashierDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
+import EsewaSuccess from './pages/EsewaSuccess';
+import EsewaFailure from './pages/EsewaFailure';
 
 
 
@@ -79,6 +81,9 @@ function App() {
         />
 
         <Route path="/manager-dashboard" element={<PrivateRoute><ManagerDashboard /></PrivateRoute>} />
+
+        <Route path="/esewa/success" element={<EsewaSuccess />} />
+        <Route path="/esewa/failure" element={<EsewaFailure />} />
 
         {/* Redirect unknown paths to landing */}
         <Route path="*" element={<Navigate to="/" replace />} />

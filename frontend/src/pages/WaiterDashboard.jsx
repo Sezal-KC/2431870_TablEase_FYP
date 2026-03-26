@@ -296,11 +296,20 @@ useEffect(() => {
                   <div 
                     key={table._id} 
                     className={`table-card ${table.status}`}
-                    onClick={() => {  
+                    onClick={() => {
                       if (table.status === 'available') {
-                        navigate(`/new-order/${table.tableNumber}`);
+                        // Mark table as occupied first, then go to new order
+                        const token = localStorage.getItem('token');
+                        axios.patch(`http://localhost:8080/api/tables/${table._id}/occupy`, {}, {
+                          headers: { Authorization: `Bearer ${token}` }
+                        }).then(() => {
+                          navigate(`/new-order/${table.tableNumber}`);
+                        }).catch(() => {
+                          navigate(`/new-order/${table.tableNumber}`);
+                        });
                       } else if (table.status === 'occupied') {
-                        
+                        navigate(`/new-order/${table.tableNumber}`);
+                      } else if (table.status === 'ordered') {
                         navigate(`/view-order/${table.tableNumber}/${table._id}`);
                       }
                     }}
@@ -322,7 +331,7 @@ useEffect(() => {
               <h3>Legend:</h3>
               <div className="legend-items">
                 <div><span className="legend-color available"></span> Available</div>
-                <div><span className="legend-color occupied"></span> Occupied</div>
+                <div><span className="legend-color occupied"></span> Occupied (Seated)</div>
                 <div><span className="legend-color ordered"></span> Order Placed</div>
               </div>
             </div>

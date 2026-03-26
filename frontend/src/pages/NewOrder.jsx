@@ -22,7 +22,7 @@ function NewOrder() {
   const [allergies, setAllergies] = useState([]);
   const [notes, setNotes] = useState('');
 
-  const ALLERGIES = ['Nuts', 'Gluten', 'Dairy', 'Seafood', 'Eggs', 'Soy', 'Spicy'];
+  const ALLERGIES = ['Nuts', 'Gluten', 'Dairy', 'MSG', 'Eggs', 'Soy', 'Spicy'];
 
   const toggleAllergy = (allergy) => {
     setAllergies(prev =>

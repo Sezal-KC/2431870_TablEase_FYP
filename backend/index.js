@@ -11,6 +11,7 @@ const path = require('path');
 const adminRoutes = require('./Routes/adminRoutes');
 const orderRoutes = require('./Routes/orderRoutes');
 const inventoryRoutes = require('./Routes/inventoryRoutes');
+const paymentRoutes = require('./Routes/paymentRoutes');
 
 
 require('dotenv').config();
@@ -51,6 +52,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/orders', orderRoutes);
 
 app.use('/api/inventory', inventoryRoutes);
+
+app.use('/api/payments', paymentRoutes);
 
 // Use server.listen instead of app.listen
 server.listen(PORT, () => {
