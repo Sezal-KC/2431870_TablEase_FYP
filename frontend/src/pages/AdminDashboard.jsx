@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from 'axios';// to make HTTP request
 import { handleSuccess, handleError } from '../utils';
 import { MdRestaurantMenu, MdPeople, MdLogout, MdAdd, MdEdit, MdDelete, MdClose, MdCheck, MdKitchen } from 'react-icons/md';
 import '../css/admin-dashboard.css';

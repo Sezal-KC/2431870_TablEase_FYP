@@ -38,7 +38,7 @@ io.on('connection', (socket) => {
   });
 });
 
-app.get('/ping', (req, res) => res.send('PONG'));
+app.get('/ping', (req, res) => res.send('PONG'));//testing
 
 app.use(bodyParser.json());
 app.use(cors());

@@ -1,4 +1,3 @@
-
 // src/pages/WaiterDashboard.jsx
 import React, { useState, useEffect } from 'react';
 
@@ -64,6 +63,11 @@ function WaiterDashboard() {
       }
     });
 
+    socket.on('itemReady', (data) => {
+      handleSuccess(`🍽️ ${data.message}`);
+      setAlerts(prev => [`🍽️ ${data.message}`, ...prev].slice(0, 5));
+    });
+
     return () => socket.disconnect();
   }, []);
 
@@ -103,7 +107,7 @@ useEffect(() => {
         const res = await axios.get('http://localhost:8080/api/orders/stats', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        const data = res.data.data;
+        const data = res.data.data; //Updates the tables state with the data received from the API
         setStats({
           todaysRevenue: data.todaysRevenue,
           ordersToday: data.ordersToday,

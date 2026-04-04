@@ -13,7 +13,9 @@ const OrderSchema = new mongoose.Schema({
     {
       name: String,
       qty: Number,
-      price: Number
+      price: Number,
+      isNew: { type: Boolean, default: true },
+      isReady: { type: Boolean, default: false }
     }
   ],
   allergies: [String],

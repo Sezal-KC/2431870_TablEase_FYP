@@ -43,7 +43,7 @@ const signup = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // ✅ Generate OTP for email verification
+    //  Generate OTP for email verification
     const otp = generateOTP();
 
     const newUser = new UserModel({
@@ -105,7 +105,7 @@ const verifyEmail = async (req, res) => {
     }
 
     user.isEmailVerified = true;
-    user.emailVerificationToken = undefined;
+    user.emailVerificationToken = undefined;//remove otp from db
     user.emailVerificationExpires = undefined;
 
     await user.save();
@@ -117,7 +117,7 @@ const verifyEmail = async (req, res) => {
 
   } catch (err) {
     console.error('Verify email error:', err);
-    res.status(500).json({
+    res.status(500).json({  //internal server error
       success: false,
       message: 'Server error'
     });
@@ -133,7 +133,7 @@ const login = async (req, res) => {
 
     const user = await UserModel.findOne({ email: email.toLowerCase() });
     if (!user) {
-      return res.status(403).json({
+      return res.status(403).json({  // Forbidden: authenticated but no permission
         success: false,
         message: 'Invalid email or password'
       });

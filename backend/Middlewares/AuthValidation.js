@@ -79,8 +79,7 @@ const loginValidation = (req, res, next) => {
       }),
 
     role: Joi.string()
-      .valid('waiter', 'cashier', 'manager', 'admin', 'kitchen_staff')
-      .optional()  // role is optional on login (can be removed if you want it required)
+      .valid('waiter', 'cashier', 'manager', 'admin', 'kitchen_staff') 
       .messages({
         'any.only': 'Invalid role selected'
       })
