@@ -300,7 +300,19 @@ function CashierDashboard() {
                 {paymentMethod === 'cash' && (
                   <div className="cash-section">
                     <label>Cash Received (Rs.)</label>
-                    <input type="number" value={cashReceived} onChange={e => setCashReceived(e.target.value)} placeholder="Enter amount received" min={netAmount} />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={cashReceived}
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                          setCashReceived(val);
+                        }
+                      }}
+                      placeholder="Enter amount received"
+                      autoComplete="off"
+                    />
                     {cashReceived && parseFloat(cashReceived) >= netAmount && (
                       <div className="change-display">Change: <strong>Rs. {change.toFixed(2)}</strong></div>
                     )}
