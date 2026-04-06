@@ -277,3 +277,43 @@
 }
 
 .notes-input:focus { border-color: #ff8c42; }
+
+.custom-allergy-input {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.custom-allergy-input input {
+  flex: 1;
+  padding: 6px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.custom-allergy-input input:focus {
+  border-color: #ff8c42;
+}
+
+.custom-allergy-btn {
+  padding: 6px 14px;
+  background: #ff8c42;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.custom-allergy-btn:hover { background: #e07b3a; }
+
+.allergy-tag.custom {
+  background: #e74c3c;
+  color: white;
+  border-color: #e74c3c;
+}

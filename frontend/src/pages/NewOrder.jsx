@@ -21,6 +21,7 @@ function NewOrder() {
 
   const [allergies, setAllergies] = useState([]);
   const [notes, setNotes] = useState('');
+  const [customAllergy, setCustomAllergy] = useState('');
 
   const ALLERGIES = ['Nuts', 'Gluten', 'Dairy', 'MSG', 'Eggs', 'Soy', 'Spicy'];
 
@@ -245,6 +246,47 @@ function NewOrder() {
                       {a}
                     </button>
                   ))}
+                  {/* Custom allergies added by waiter */}
+                  {allergies.filter(a => !ALLERGIES.includes(a)).map(a => (
+                    <button
+                      key={a}
+                      className="allergy-tag selected custom"
+                      onClick={() => toggleAllergy(a)}
+                      type="button"
+                    >
+                      {a} ✕
+                    </button>
+                  ))}
+                </div>
+
+                {/* Add custom allergy */}
+                <div className="custom-allergy-input">
+                  <input
+                    type="text"
+                    value={customAllergy}
+                    onChange={e => setCustomAllergy(e.target.value)}
+                    placeholder="Add other allergy..."
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && customAllergy.trim()) {
+                        if (!allergies.includes(customAllergy.trim())) {
+                          setAllergies(prev => [...prev, customAllergy.trim()]);
+                        }
+                        setCustomAllergy('');
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="custom-allergy-btn"
+                    onClick={() => {
+                      if (customAllergy.trim() && !allergies.includes(customAllergy.trim())) {
+                        setAllergies(prev => [...prev, customAllergy.trim()]);
+                      }
+                      setCustomAllergy('');
+                    }}
+                  >
+                    + Add
+                  </button>
                 </div>
               </div>
 
