@@ -683,3 +683,76 @@
   color: #555;
 }
 
+.bill-type-section {
+  background: white;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.bill-type-section h3 {
+  font-size: 0.95rem;
+  color: #3a2f25;
+  margin-bottom: 12px;
+}
+
+.bill-type-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.bill-type-btn {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.bill-type-btn:hover { border-color: #ff8c42; }
+.bill-type-btn.active {
+  border-color: #ff8c42;
+  background: #fff3e0;
+  color: #ff8c42;
+  font-weight: 700;
+}
+
+.vat-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fdf6f0;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ffe0cc;
+}
+
+.vat-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vat-form-group label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.vat-form-group input {
+  padding: 8px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.vat-form-group input:focus { border-color: #ff8c42; }
+

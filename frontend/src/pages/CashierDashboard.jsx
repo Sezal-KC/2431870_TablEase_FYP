@@ -29,6 +29,13 @@ function CashierDashboard() {
   const [receiptSummary, setReceiptSummary] = useState({ totalRevenue: 0, totalOrders: 0 });
   const printRef = useRef();
 
+  // Bill type states
+  const [billType, setBillType] = useState('normal');
+  const [showVatForm, setShowVatForm] = useState(false);
+  const [vatCustomer, setVatCustomer] = useState({ name: '', pan: '', address: '' });
+  const [restaurantInfo, setRestaurantInfo] = useState(null);
+  const [invoice, setInvoice] = useState(null);
+
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -60,8 +67,18 @@ function CashierDashboard() {
     }
   };
 
+  const fetchRestaurantInfo = async () => {
+    try {
+      const res = await axios.get(`${API}/api/payments/restaurant-info`, { headers });
+      setRestaurantInfo(res.data.data);
+    } catch (err) {
+      console.error('Failed to fetch restaurant info');
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
+    fetchRestaurantInfo();
     const interval = setInterval(fetchOrders, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -91,20 +108,56 @@ function CashierDashboard() {
     return { gross, taxable, vat, net: gross };
   };
 
+  const generateInvoice = async (orderId, type, customerData = {}) => {
+    try {
+      const res = await axios.post(`${API}/api/payments/generate-invoice`, {
+        orderId,
+        billType: type,
+        customerName: customerData.name || '',
+        customerPAN: customerData.pan || '',
+        customerAddress: customerData.address || ''
+      }, { headers });
+      return res.data.data;
+    } catch (err) {
+      console.error('Invoice generation failed');
+      return null;
+    }
+  };
+
   const handlePayment = async () => {
     if (paymentMethod === 'cash' && (!cashReceived || parseFloat(cashReceived) < netAmount)) {
       return handleError('Cash received is less than the total amount');
     }
+    if (billType === 'vat' && !vatCustomer.name) {
+      return handleError('Customer name is required for VAT bill');
+    }
+
     setProcessing(true);
     try {
       await axios.patch(`${API}/api/orders/${selectedOrder._id}/pay`, { paymentMethod }, { headers });
+
+      // Generate invoice
+      const inv = await generateInvoice(
+        selectedOrder._id,
+        billType,
+        billType === 'vat' ? vatCustomer : {}
+      );
+      setInvoice(inv);
+
       setPaidOrder({
         ...selectedOrder, grossAmount, discount, taxableAmount,
-        vatAmount, netAmount, cashReceived: parseFloat(cashReceived || 0), change, paymentMethod
+        vatAmount, netAmount, cashReceived: parseFloat(cashReceived || 0),
+        change, paymentMethod, billType,
+        customerName: vatCustomer.name,
+        customerPAN: vatCustomer.pan,
+        customerAddress: vatCustomer.address
       });
       setShowReceipt(true);
       setSelectedOrder(null);
       setCashReceived('');
+      setBillType('normal');
+      setVatCustomer({ name: '', pan: '', address: '' });
+      setShowVatForm(false);
       fetchOrders();
       handleSuccess('Payment successful!');
     } catch (err) {
@@ -142,37 +195,74 @@ function CashierDashboard() {
     form.submit();
   };
 
-  const handlePrint = (order) => {
+  const handlePrint = (order, invData) => {
     const calc = getReceiptCalc(order);
+    const isVat = order.billType === 'vat' || invData?.billType === 'vat';
+    const invoiceNum = invData?.invoiceNumber || '—';
+    const fiscalYear = invData?.fiscalYear || restaurantInfo?.fiscalYear || '2081/82';
+    const restaurant = restaurantInfo || {
+      name: 'TablEase Restaurant',
+      address: 'Kathmandu, Nepal',
+      phone: '9800000000',
+      vatNo: '123456789',
+      panNo: '987654321'
+    };
+
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
       <html>
         <head>
-          <title>Receipt - ${order.table?.tableNumber}</title>
+          <title>${isVat ? 'VAT Invoice' : 'Receipt'} - ${order.table?.tableNumber}</title>
           <style>
-            body { font-family: 'Courier New', monospace; width: 300px; margin: 0 auto; padding: 20px; font-size: 12px; }
-            h2 { text-align: center; font-size: 16px; margin-bottom: 4px; }
+            body { font-family: 'Courier New', monospace; width: 320px; margin: 0 auto; padding: 20px; font-size: 12px; }
+            h2 { text-align: center; font-size: 16px; margin-bottom: 2px; }
             .center { text-align: center; }
             .divider { border-top: 1px dashed #000; margin: 8px 0; }
+            .solid { border-top: 1px solid #000; margin: 8px 0; }
             .row { display: flex; justify-content: space-between; margin: 3px 0; }
             .bold { font-weight: bold; }
-            .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 14px; }
+            .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 13px; }
+            .vat-title { text-align: center; font-weight: bold; font-size: 14px; border: 1px solid #000; padding: 4px; margin: 6px 0; }
           </style>
         </head>
         <body>
-          <h2>ABC</h2>
-          <p class="center">Restaurant</p>
+          <h2>${restaurant.name}</h2>
+          <p class="center">${restaurant.address}</p>
+          <p class="center">Tel: ${restaurant.phone}</p>
+          ${isVat ? `
+            <p class="center">VAT No: ${restaurant.vatNo}</p>
+            <p class="center">PAN No: ${restaurant.panNo}</p>
+            <div class="vat-title">TAX INVOICE</div>
+          ` : '<div class="vat-title">RECEIPT</div>'}
           <div class="divider"></div>
+          <div class="row"><span>Invoice No:</span><span>${invoiceNum}</span></div>
+          
+          <div class="row"><span>Date:</span><span>${new Date().toLocaleDateString('en-GB')}</span></div>
+          <div class="row"><span>Time:</span><span>${new Date().toLocaleTimeString()}</span></div>
           <div class="row"><span>Table:</span><span>${order.table?.tableNumber}</span></div>
-          <div class="row"><span>Date:</span><span>${new Date(order.updatedAt).toLocaleString()}</span></div>
           <div class="row"><span>Payment:</span><span>${order.paymentMethod || 'Cash'}</span></div>
-          <div class="row"><span>Waiter:</span><span>${order.waiter?.name || 'N/A'}</span></div>
+          <div class="row"><span>Served by:</span><span>${order.waiter?.name || 'Staff'}</span></div>
+          ${isVat ? `
+            <div class="divider"></div>
+            <div class="bold">Bill To:</div>
+            <div class="row"><span>Name:</span><span>${order.customerName || invData?.customerName || '—'}</span></div>
+            <div class="row"><span>PAN:</span><span>${order.customerPAN || invData?.customerPAN || '—'}</span></div>
+            <div class="row"><span>Address:</span><span>${order.customerAddress || invData?.customerAddress || '—'}</span></div>
+          ` : ''}
           <div class="divider"></div>
-          <div class="bold">Items:</div>
+          <div class="row bold">
+            <span style="flex:2">Item</span>
+            <span style="flex:0.5;text-align:center">Qty</span>
+            <span style="flex:1;text-align:right">Rate</span>
+            <span style="flex:1;text-align:right">Amount</span>
+          </div>
+          <div class="divider"></div>
           ${order.items.map(item => `
             <div class="row">
-              <span>${item.name} x${item.qty}</span>
-              <span>Rs. ${(item.price * item.qty / 1.13).toFixed(2)}</span>
+              <span style="flex:2">${item.name}</span>
+              <span style="flex:0.5;text-align:center">${item.qty}</span>
+              <span style="flex:1;text-align:right">Rs.${(item.price / 1.13).toFixed(2)}</span>
+              <span style="flex:1;text-align:right">Rs.${(item.price * item.qty / 1.13).toFixed(2)}</span>
             </div>
           `).join('')}
           <div class="divider"></div>
@@ -180,11 +270,16 @@ function CashierDashboard() {
           <div class="row"><span>Discount:</span><span>Rs. 0.00</span></div>
           <div class="row"><span>Taxable Amount:</span><span>Rs. ${calc.taxable.toFixed(2)}</span></div>
           <div class="row"><span>VAT (13%):</span><span>Rs. ${calc.vat.toFixed(2)}</span></div>
-          <div class="divider"></div>
+          <div class="solid"></div>
           <div class="total-row"><span>Net Amount:</span><span>Rs. ${calc.net.toFixed(2)}</span></div>
+          ${order.paymentMethod === 'cash' ? `
+            <div class="divider"></div>
+            <div class="row"><span>Tender:</span><span>Rs. ${order.cashReceived?.toFixed ? order.cashReceived.toFixed(2) : order.cashReceived}</span></div>
+            <div class="row"><span>Change:</span><span>Rs. ${order.change?.toFixed ? order.change.toFixed(2) : order.change}</span></div>
+          ` : ''}
           <div class="divider"></div>
           <p class="center">Thank you for dining with us!</p>
-          <p class="center">ABC Restaurant</p>
+          <p class="center">${restaurant.name}</p>
         </body>
       </html>
     `);
@@ -240,7 +335,14 @@ function CashierDashboard() {
                   <div
                     key={order._id}
                     className={`order-card ${selectedOrder?._id === order._id ? 'selected' : ''}`}
-                    onClick={() => { setSelectedOrder(order); setCashReceived(''); setPaymentMethod('cash'); }}
+                    onClick={() => {
+                      setSelectedOrder(order);
+                      setCashReceived('');
+                      setPaymentMethod('cash');
+                      setBillType('normal');
+                      setShowVatForm(false);
+                      setVatCustomer({ name: '', pan: '', address: '' });
+                    }}
                   >
                     <div className="order-card-top">
                       <span className="order-table">Table {order.table?.tableNumber}</span>
@@ -268,6 +370,8 @@ function CashierDashboard() {
                   <h2>Bill — Table {selectedOrder.table?.tableNumber}</h2>
                   <button className="close-btn" onClick={() => setSelectedOrder(null)}><MdClose /></button>
                 </div>
+
+                {/* Itemized Bill */}
                 <div className="bill-items">
                   {selectedOrder.items.map((item, i) => {
                     const itemExVat = (item.price * item.qty) / 1.13;
@@ -280,7 +384,10 @@ function CashierDashboard() {
                     );
                   })}
                 </div>
+
                 <div className="bill-divider" />
+
+                {/* Totals */}
                 <div className="bill-totals">
                   <div className="bill-row"><span>Gross Amount</span><span>Rs. {taxableAmount.toFixed(2)}</span></div>
                   <div className="bill-row"><span>Discount</span><span>Rs. {discount.toFixed(2)}</span></div>
@@ -288,7 +395,63 @@ function CashierDashboard() {
                   <div className="bill-row"><span>VAT (13%)</span><span>Rs. {vatAmount.toFixed(2)}</span></div>
                   <div className="bill-row grand-total"><span>Net Amount</span><span>Rs. {netAmount.toFixed(2)}</span></div>
                 </div>
+
                 <div className="bill-divider" />
+
+                {/* Bill Type Selection */}
+                <div className="bill-type-section">
+                  <h3>Bill Type</h3>
+                  <div className="bill-type-buttons">
+                    <button
+                      className={`bill-type-btn ${billType === 'normal' ? 'active' : ''}`}
+                      onClick={() => { setBillType('normal'); setShowVatForm(false); }}
+                    >
+                      🧾 Normal Bill
+                    </button>
+                    <button
+                      className={`bill-type-btn ${billType === 'vat' ? 'active' : ''}`}
+                      onClick={() => { setBillType('vat'); setShowVatForm(true); }}
+                    >
+                      📋 VAT Bill
+                    </button>
+                  </div>
+
+                  {/* VAT Customer Form */}
+                  {showVatForm && (
+                    <div className="vat-form">
+                      <div className="vat-form-group">
+                        <label>Customer / Company Name *</label>
+                        <input
+                          type="text"
+                          value={vatCustomer.name}
+                          onChange={e => setVatCustomer({ ...vatCustomer, name: e.target.value })}
+                          placeholder="e.g. ABC Company Pvt. Ltd."
+                        />
+                      </div>
+                      <div className="vat-form-group">
+                        <label>PAN Number (optional)</label>
+                        <input
+                          type="text"
+                          value={vatCustomer.pan}
+                          onChange={e => setVatCustomer({ ...vatCustomer, pan: e.target.value })}
+                          placeholder="e.g. 123456789"
+                          maxLength={9}
+                        />
+                      </div>
+                      <div className="vat-form-group">
+                        <label>Address</label>
+                        <input
+                          type="text"
+                          value={vatCustomer.address}
+                          onChange={e => setVatCustomer({ ...vatCustomer, address: e.target.value })}
+                          placeholder="e.g. Kathmandu, Nepal"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Payment Method */}
                 <div className="payment-methods">
                   <h3>Payment Method</h3>
                   <div className="method-buttons">
@@ -297,6 +460,8 @@ function CashierDashboard() {
                     <button className={`method-btn ${paymentMethod === 'esewa' ? 'active' : ''}`} onClick={() => setPaymentMethod('esewa')}>🟢 eSewa</button>
                   </div>
                 </div>
+
+                {/* Cash Payment */}
                 {paymentMethod === 'cash' && (
                   <div className="cash-section">
                     <label>Cash Received (Rs.)</label>
@@ -321,6 +486,8 @@ function CashierDashboard() {
                     )}
                   </div>
                 )}
+
+                {/* QR Payment */}
                 {paymentMethod === 'qr' && (
                   <div className="qr-section">
                     <p className="qr-instruction">Scan to pay <strong>Rs. {netAmount.toFixed(2)}</strong> via eSewa</p>
@@ -334,6 +501,8 @@ function CashierDashboard() {
                     </div>
                   </div>
                 )}
+
+                {/* eSewa Payment */}
                 {paymentMethod === 'esewa' && (
                   <div className="esewa-section">
                     <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" className="esewa-logo" onError={e => { e.target.style.display = 'none'; }} />
@@ -348,6 +517,8 @@ function CashierDashboard() {
                     <button className="esewa-pay-btn" onClick={handleEsewaPayment}>Pay with eSewa →</button>
                   </div>
                 )}
+
+                {/* Confirm Payment */}
                 {paymentMethod !== 'esewa' && (
                   <button
                     className="confirm-payment-btn"
@@ -366,7 +537,6 @@ function CashierDashboard() {
       {/* RECEIPTS TAB */}
       {activeTab === 'receipts' && (
         <div className="receipts-layout">
-          {/* Summary + Filter */}
           <div className="receipts-header">
             <div className="receipts-summary">
               <div className="summary-card">
@@ -389,7 +559,6 @@ function CashierDashboard() {
           </div>
 
           <div className="receipts-content">
-            {/* Left: Receipt List */}
             <div className="receipts-list-panel">
               <h2>Paid Orders</h2>
               {loadingReceipts ? (
@@ -424,7 +593,6 @@ function CashierDashboard() {
               )}
             </div>
 
-            {/* Right: Receipt Detail */}
             <div className="receipt-detail-panel">
               {!selectedReceipt ? (
                 <div className="no-selection"><span>👈</span><p>Select a receipt to view details</p></div>
@@ -432,17 +600,15 @@ function CashierDashboard() {
                 <>
                   <div className="bill-header">
                     <h2>Receipt — Table {selectedReceipt.table?.tableNumber}</h2>
-                    <button className="print-btn" onClick={() => handlePrint(selectedReceipt)}>
+                    <button className="print-btn" onClick={() => handlePrint(selectedReceipt, null)}>
                       <MdPrint size={18} /> Print
                     </button>
                   </div>
-
                   <div className="receipt-info">
                     <p><strong>Date:</strong> {new Date(selectedReceipt.updatedAt).toLocaleString()}</p>
                     <p><strong>Waiter:</strong> {selectedReceipt.waiter?.name || 'N/A'}</p>
                     <p><strong>Payment:</strong> {selectedReceipt.paymentMethod || 'cash'}</p>
                   </div>
-
                   <div className="bill-items">
                     {selectedReceipt.items.map((item, i) => {
                       const itemExVat = (item.price * item.qty) / 1.13;
@@ -455,9 +621,7 @@ function CashierDashboard() {
                       );
                     })}
                   </div>
-
                   <div className="bill-divider" />
-
                   {(() => {
                     const calc = getReceiptCalc(selectedReceipt);
                     return (
@@ -470,8 +634,7 @@ function CashierDashboard() {
                       </div>
                     );
                   })()}
-
-                  <button className="confirm-payment-btn" style={{ background: '#2980b9' }} onClick={() => handlePrint(selectedReceipt)}>
+                  <button className="confirm-payment-btn" style={{ background: '#2980b9' }} onClick={() => handlePrint(selectedReceipt, null)}>
                     <MdPrint size={18} /> Print Receipt
                   </button>
                 </>
@@ -486,10 +649,24 @@ function CashierDashboard() {
         <div className="modal-overlay" onClick={() => setShowReceipt(false)}>
           <div className="receipt-modal" onClick={e => e.stopPropagation()}>
             <div className="receipt-header">
-              <h2>🧾 TablEase</h2>
-              <p>Payment Receipt</p>
+              <h2>🧾 {restaurantInfo?.name || 'TablEase'}</h2>
+              <p>{paidOrder.billType === 'vat' ? 'TAX INVOICE' : 'Payment Receipt'}</p>
             </div>
             <div className="receipt-body">
+              {paidOrder.billType === 'vat' && (
+                <>
+                  <p><strong>VAT No:</strong> {restaurantInfo?.vatNo}</p>
+                  <p><strong>PAN No:</strong> {restaurantInfo?.panNo}</p>
+                  <div className="receipt-divider" />
+                  <p><strong>Bill To:</strong></p>
+                  <p>{paidOrder.customerName}</p>
+                  <p>PAN: {paidOrder.customerPAN}</p>
+                  <p>{paidOrder.customerAddress}</p>
+                </>
+              )}
+              <div className="receipt-divider" />
+              <p><strong>Invoice No:</strong> {invoice?.invoiceNumber || '—'}</p>
+              
               <p><strong>Table:</strong> {paidOrder.table?.tableNumber}</p>
               <p><strong>Time:</strong> {new Date().toLocaleString()}</p>
               <p><strong>Payment:</strong> {paidOrder.paymentMethod === 'cash' ? '💵 Cash' : paidOrder.paymentMethod === 'esewa' ? '🟢 eSewa' : '📱 QR Pay'}</p>
@@ -515,7 +692,7 @@ function CashierDashboard() {
             </div>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button className="receipt-close-btn" style={{ flex: 1 }} onClick={() => setShowReceipt(false)}>Close</button>
-              <button className="receipt-close-btn" style={{ flex: 1, background: '#2980b9' }} onClick={() => handlePrint(paidOrder)}>
+              <button className="receipt-close-btn" style={{ flex: 1, background: '#2980b9' }} onClick={() => handlePrint(paidOrder, invoice)}>
                 🖨️ Print
               </button>
             </div>
