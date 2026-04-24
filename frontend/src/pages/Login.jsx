@@ -156,6 +156,10 @@ function Login({ setAuth }) {
           <p className="switch-link">
             Don't have an account? <Link to="/signup">Sign Up</Link>
           </p>
+
+          <p className="switch-link">
+            <Link to="/forgot-password">Forgot Password?</Link>
+          </p>
         </form>
 
         

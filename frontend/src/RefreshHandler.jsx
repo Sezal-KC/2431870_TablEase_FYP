@@ -21,7 +21,7 @@ function RefreshHandler({ setIsAuthenticated }) {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('userRole')?.trim().toLowerCase();
 
-    const publicPaths = ['/login', '/signup', '/verify-otp', '/verify-email'];
+    const publicPaths = ['/login', '/signup', '/verify-otp', '/verify-email', , '/forgot-password'];
 
     if (token) {
       setIsAuthenticated(true);

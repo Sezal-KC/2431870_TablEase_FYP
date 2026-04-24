@@ -18,7 +18,8 @@ import CashierDashboard from './pages/CashierDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
 import EsewaSuccess from './pages/EsewaSuccess';
 import EsewaFailure from './pages/EsewaFailure';
-
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 
 
@@ -84,6 +85,9 @@ function App() {
 
         <Route path="/esewa/success" element={<EsewaSuccess />} />
         <Route path="/esewa/failure" element={<EsewaFailure />} />
+
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Redirect unknown paths to landing */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -124,6 +124,8 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+
+
 /* =========================
    LOGIN (EMAIL MUST BE VERIFIED)
 ========================= */
@@ -182,8 +184,126 @@ const login = async (req, res) => {
   }
 };
 
+/* =========================
+   FORGOT PASSWORD
+========================= */
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    const user = await UserModel.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      // Don't reveal if email exists or not for security
+      return res.status(200).json({
+        success: true,
+        message: 'If this email is registered, a reset link has been sent.'
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    user.passwordResetToken = hashedToken;
+    user.passwordResetExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
+    await user.save();
+
+    // Reset link points to frontend
+    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+
+    await sendEmail({
+      to: email,
+      subject: 'TablEase — Password Reset Request',
+      html: `
+        <h2>TablEase Password Reset</h2>
+        <p>You requested to reset your password.</p>
+        <p>Click the link below to reset your password. This link is valid for <strong>15 minutes</strong>.</p>
+        <a href="${resetUrl}" style="
+          display: inline-block;
+          padding: 12px 24px;
+          background: #ff8c42;
+          color: white;
+          text-decoration: none;
+          border-radius: 8px;
+          font-weight: bold;
+          margin: 16px 0;
+        ">Reset Password</a>
+        <p>If you did not request this, please ignore this email.</p>
+        <p>Your password will not change until you click the link above.</p>
+      `
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset link sent to your email.'
+    });
+
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+/* =========================
+   RESET PASSWORD
+========================= */
+const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password, confirmPassword } = req.body;
+
+    if (!password || !confirmPassword) {
+      return res.status(400).json({ success: false, message: 'All fields are required' });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ success: false, message: 'Passwords do not match' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+    }
+
+    // Hash the token from URL to compare with stored hash
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await UserModel.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid or expired reset link. Please request a new one.'
+      });
+    }
+
+    // Update password
+    user.password = await bcrypt.hash(password, 10);
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successful. You can now login with your new password.'
+    });
+
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
 module.exports = {
   signup,
   login,
-  verifyEmail
+  verifyEmail,
+  forgotPassword,
+  resetPassword
 };
