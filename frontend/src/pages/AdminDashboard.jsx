@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';// to make HTTP request
+import axios from 'axios';
 import { handleSuccess, handleError } from '../utils';
 import { MdRestaurantMenu, MdPeople, MdLogout, MdAdd, MdEdit, MdDelete, MdClose, MdCheck, MdKitchen } from 'react-icons/md';
 import '../css/admin-dashboard.css';
@@ -16,8 +16,10 @@ function AdminDashboard() {
   const [loadingIngredients, setLoadingIngredients] = useState(false);
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [showIngredientModal, setShowIngredientModal] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [editingIngredient, setEditingIngredient] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
 
   const [menuForm, setMenuForm] = useState({
     name: '', category: 'Starters', price: '', imageUrl: '', description: '', available: true
@@ -25,6 +27,10 @@ function AdminDashboard() {
 
   const [ingredientForm, setIngredientForm] = useState({
     name: '', unit: 'kg', currentStock: '', lowStockThreshold: '', category: 'Other'
+  });
+
+  const [userForm, setUserForm] = useState({
+    name: '', email: '', role: '', phone: '', address: ''
   });
 
   const token = localStorage.getItem('token');
@@ -102,6 +108,32 @@ function AdminDashboard() {
   };
 
   // ── User handlers ───────────────────────────────────────────────
+  const openEditUserModal = (user) => {
+    setEditingUser(user);
+    setUserForm({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone || '',
+      address: user.address || ''
+    });
+    setShowUserModal(true);
+  };
+
+  const handleUserSave = async () => {
+    if (!userForm.name || !userForm.email || !userForm.role) {
+      return handleError('Name, email and role are required');
+    }
+    try {
+      await axios.put(`${API}/api/admin/users/${editingUser._id}`, userForm, { headers });
+      handleSuccess('User updated!');
+      setShowUserModal(false);
+      fetchUsers();
+    } catch {
+      handleError('Failed to update user');
+    }
+  };
+
   const handleUserDelete = async (id, name) => {
     if (!window.confirm(`Delete user "${name}"?`)) return;
     try {
@@ -245,17 +277,33 @@ function AdminDashboard() {
                 <div className="users-table-wrap">
                   <table className="users-table">
                     <thead>
-                      <tr><th>Name</th><th>Email</th><th>Role</th><th>Verified</th><th>Joined</th><th>Action</th></tr>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Role</th>
+                        <th>Verified</th>
+                        <th>Joined</th>
+                        <th>Action</th>
+                      </tr>
                     </thead>
                     <tbody>
                       {users.map(user => (
                         <tr key={user._id}>
                           <td><strong>{user.name}</strong></td>
                           <td>{user.email}</td>
+                          <td>{user.phone || '—'}</td>
+                          <td>{user.address || '—'}</td>
                           <td><span className="role-badge" style={{ background: roleColors[user.role] || '#888' }}>{user.role}</span></td>
                           <td>{user.isEmailVerified ? <span className="verified"><MdCheck size={14} /> Yes</span> : <span className="unverified">No</span>}</td>
                           <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                          <td><button className="btn-icon delete" onClick={() => handleUserDelete(user._id, user.name)}><MdDelete size={16} /></button></td>
+                          <td>
+                            <div className="card-actions">
+                              <button className="btn-icon edit" onClick={() => openEditUserModal(user)}><MdEdit size={16} /></button>
+                              <button className="btn-icon delete" onClick={() => handleUserDelete(user._id, user.name)}><MdDelete size={16} /></button>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -448,6 +496,64 @@ function AdminDashboard() {
               <button className="btn-primary" onClick={handleIngredientSave}>
                 {editingIngredient ? 'Save Changes' : 'Add Ingredient'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* USER EDIT MODAL */}
+      {showUserModal && (
+        <div className="modal-overlay" onClick={() => setShowUserModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Edit User</h2>
+              <button className="modal-close" onClick={() => setShowUserModal(false)}><MdClose size={22} /></button>
+            </div>
+            <div className="modal-body">
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Full Name *</label>
+                  <input type="text" value={userForm.name}
+                    onChange={e => setUserForm({ ...userForm, name: e.target.value })}
+                    placeholder="Full name" />
+                </div>
+                <div className="form-group">
+                  <label>Email *</label>
+                  <input type="email" value={userForm.email}
+                    onChange={e => setUserForm({ ...userForm, email: e.target.value })}
+                    placeholder="Email address" />
+                </div>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Role *</label>
+                  <select value={userForm.role}
+                    onChange={e => setUserForm({ ...userForm, role: e.target.value })}>
+                    <option value="">Select role</option>
+                    <option value="waiter">Waiter</option>
+                    <option value="cashier">Cashier</option>
+                    <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                    <option value="kitchen_staff">Kitchen Staff</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Phone</label>
+                  <input type="text" value={userForm.phone}
+                    onChange={e => setUserForm({ ...userForm, phone: e.target.value })}
+                    placeholder="e.g. 9800000000" />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Address</label>
+                <input type="text" value={userForm.address}
+                  onChange={e => setUserForm({ ...userForm, address: e.target.value })}
+                  placeholder="e.g. Kathmandu, Nepal" />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowUserModal(false)}>Cancel</button>
+              <button className="btn-primary" onClick={handleUserSave}>Save Changes</button>
             </div>
           </div>
         </div>

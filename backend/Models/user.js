@@ -21,10 +21,23 @@ const UserSchema = new Schema({
     required: true
   },
 
+
+
   role: {
     type: String,
     enum: ['waiter', 'cashier', 'manager', 'admin', 'kitchen_staff'],
     required: true
+  },
+
+  phone: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  address: {
+    type: String,
+    trim: true,
+    default: ''
   },
 
   isEmailVerified: {

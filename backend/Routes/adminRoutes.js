@@ -31,6 +31,22 @@ router.delete('/users/:id', async (req, res) => {
   } catch { res.status(500).json({ success: false, message: 'Failed to delete user' }); }
 });
 
+// PUT update user
+router.put('/users/:id', async (req, res) => {
+  try {
+    const { name, email, role, phone, address } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { name, email, role, phone, address },
+      { new: true, runValidators: true }
+    ).select('-password -emailVerificationToken -emailVerificationExpires');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, message: 'User updated', data: user });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update user' });
+  }
+});
+
 // Menu
 router.get('/menu', async (req, res) => {
   try {
