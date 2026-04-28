@@ -15,10 +15,10 @@ function NewOrder() {
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [menuError, setMenuError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [cart, setCart] = useState({}); // { itemId: { ...item, qty } }
+  const [cart, setCart] = useState({});
   const [tableId, setTableId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-
+  const [searchTerm, setSearchTerm] = useState('');
   const [allergies, setAllergies] = useState([]);
   const [notes, setNotes] = useState('');
   const [customAllergy, setCustomAllergy] = useState('');
@@ -34,7 +34,6 @@ function NewOrder() {
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
-  // Fetch menu
   useEffect(() => {
     const fetchMenu = async () => {
       setLoadingMenu(true);
@@ -58,7 +57,6 @@ function NewOrder() {
     fetchMenu();
   }, []);
 
-  // Fetch tableId from tableNumber
   useEffect(() => {
     const fetchTableId = async () => {
       try {
@@ -72,7 +70,6 @@ function NewOrder() {
     fetchTableId();
   }, [tableNumber]);
 
-  // Cart helpers
   const addToCart = (item) => {
     setCart(prev => ({
       ...prev,
@@ -106,31 +103,70 @@ function NewOrder() {
   const totalAmount = cartItems.reduce((sum, item) => sum + item.price * item.qty, 0);
   const totalQty = cartItems.reduce((sum, item) => sum + item.qty, 0);
 
-  // Submit order
   const handleSubmitOrder = async () => {
-  if (cartItems.length === 0) return handleError('Add at least one item to the order');
-  if (!tableId) return handleError('Table not found');
+    if (cartItems.length === 0) return handleError('Add at least one item to the order');
+    if (!tableId) return handleError('Table not found');
+    setSubmitting(true);
+    try {
+      const items = cartItems.map(item => ({
+        name: item.name,
+        qty: item.qty,
+        price: item.price
+      }));
+      await axios.post(`${API}/api/orders`,
+        { tableId, items, totalAmount, allergies, notes },
+        { headers }
+      );
+      handleSuccess(`Order placed for ${tableNumber}!`);
+      setTimeout(() => navigate('/waiter-dashboard'), 1500);
+    } catch (err) {
+      handleError('Failed to place order. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-  setSubmitting(true);
-  try {
-    const items = cartItems.map(item => ({
-      name: item.name,
-      qty: item.qty,
-      price: item.price
-    }));
+  // Get items to display based on search
+  const getDisplayItems = () => {
+    if (searchTerm.trim()) {
+      return Object.values(menuItems).flat().filter(item =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    return menuItems[selectedCategory] || [];
+  };
 
-    await axios.post(`${API}/api/orders`,
-      { tableId, items, totalAmount, allergies, notes },
-      { headers }
+  const displayItems = getDisplayItems();
+
+  const renderMenuCard = (item) => {
+    const inCart = cart[item._id];
+    return (
+      <div key={item._id} className="menu-item-card">
+        <img
+          src={item.imageUrl?.startsWith('/uploads') ? `${API}${item.imageUrl}` : item.imageUrl}
+          alt={item.name}
+          className="menu-item-image"
+          onError={e => { e.target.src = 'https://via.placeholder.com/300x200?text=No+Image'; }}
+        />
+        <div className="item-info">
+          <h3>{item.name}</h3>
+          <p className="item-price">Rs. {item.price}</p>
+          {searchTerm && <p className="item-category-tag">{item.category}</p>}
+        </div>
+        <div className="item-controls">
+          {inCart ? (
+            <div className="qty-controls">
+              <button className="qty-btn" onClick={() => decreaseQty(item._id)}><MdRemove /></button>
+              <span className="qty-num">{inCart.qty}</span>
+              <button className="qty-btn" onClick={() => addToCart(item)}><MdAdd /></button>
+            </div>
+          ) : (
+            <button className="add-btn" onClick={() => addToCart(item)}>Add</button>
+          )}
+        </div>
+      </div>
     );
-    handleSuccess(`Order placed for ${tableNumber}!`);
-    setTimeout(() => navigate('/waiter-dashboard'), 1500);
-  } catch (err) {
-    handleError('Failed to place order. Please try again.');
-  } finally {
-    setSubmitting(false);
-  }
-};
+  };
 
   return (
     <div className="new-order-page">
@@ -144,17 +180,33 @@ function NewOrder() {
       <div className="new-order-layout">
         {/* LEFT: Menu */}
         <div className="menu-panel">
-          {/* Categories */}
-          <div className="menu-categories">
-            {Object.keys(menuItems).map(category => (
-              <button
-                key={category}
-                className={`category-btn ${selectedCategory === category ? 'active' : ''}`}
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
-              </button>
-            ))}
+          {/* Categories — hide when searching */}
+          {!searchTerm && (
+            <div className="menu-categories">
+              {Object.keys(menuItems).map(category => (
+                <button
+                  key={category}
+                  className={`category-btn ${selectedCategory === category ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Search Bar */}
+          <div className="menu-search">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              placeholder="🔍 Search menu items..."
+              className="menu-search-input"
+            />
+            {searchTerm && (
+              <button className="search-clear-btn" onClick={() => setSearchTerm('')}>✕</button>
+            )}
           </div>
 
           {/* Items */}
@@ -163,38 +215,12 @@ function NewOrder() {
               <p className="loading-message">Loading menu...</p>
             ) : menuError ? (
               <p className="error-message">{menuError}</p>
-            ) : !menuItems[selectedCategory] || menuItems[selectedCategory].length === 0 ? (
+            ) : searchTerm && displayItems.length === 0 ? (
+              <p className="loading-message">No items found for "{searchTerm}"</p>
+            ) : displayItems.length === 0 ? (
               <p className="loading-message">No items in {selectedCategory}</p>
             ) : (
-              menuItems[selectedCategory].map(item => {
-                const inCart = cart[item._id];
-                return (
-                  <div key={item._id} className="menu-item-card">
-                    <img
-                      src={item.imageUrl?.startsWith('/uploads')
-                        ? `${API}${item.imageUrl}` : item.imageUrl}
-                      alt={item.name}
-                      className="menu-item-image"
-                      onError={e => { e.target.src = 'https://via.placeholder.com/300x200?text=No+Image'; }}
-                    />
-                    <div className="item-info">
-                      <h3>{item.name}</h3>
-                      <p className="item-price">Rs. {item.price}</p>
-                    </div>
-                    <div className="item-controls">
-                      {inCart ? (
-                        <div className="qty-controls">
-                          <button className="qty-btn" onClick={() => decreaseQty(item._id)}><MdRemove /></button>
-                          <span className="qty-num">{inCart.qty}</span>
-                          <button className="qty-btn" onClick={() => addToCart(item)}><MdAdd /></button>
-                        </div>
-                      ) : (
-                        <button className="add-btn" onClick={() => addToCart(item)}>Add</button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
+              displayItems.map(item => renderMenuCard(item))
             )}
           </div>
         </div>
@@ -231,7 +257,7 @@ function NewOrder() {
                 <span>Total ({totalQty} items)</span>
                 <span className="total-amount">Rs. {totalAmount.toFixed(0)}</span>
               </div>
-              
+
               {/* Allergies */}
               <div className="allergies-section">
                 <h4>⚠️ Allergies</h4>
@@ -246,7 +272,6 @@ function NewOrder() {
                       {a}
                     </button>
                   ))}
-                  {/* Custom allergies added by waiter */}
                   {allergies.filter(a => !ALLERGIES.includes(a)).map(a => (
                     <button
                       key={a}
@@ -258,8 +283,6 @@ function NewOrder() {
                     </button>
                   ))}
                 </div>
-
-                {/* Add custom allergy */}
                 <div className="custom-allergy-input">
                   <input
                     type="text"

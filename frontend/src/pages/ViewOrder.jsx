@@ -22,18 +22,16 @@ function ViewOrder() {
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Menu state for adding more items
   const [menuItems, setMenuItems] = useState({});
   const [selectedCategory, setSelectedCategory] = useState('');
   const [cart, setCart] = useState({});
   const [showMenu, setShowMenu] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [menuSearchTerm, setMenuSearchTerm] = useState('');
 
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
-  // Fetch active order
   const fetchOrder = async () => {
     setLoading(true);
     try {
@@ -47,7 +45,6 @@ function ViewOrder() {
     }
   };
 
-  // Fetch menu for adding more items
   const fetchMenu = async () => {
     try {
       const res = await axios.get(`${API}/api/menu`, { headers });
@@ -70,7 +67,6 @@ function ViewOrder() {
     fetchMenu();
   }, []);
 
-  // Cart helpers
   const addToCart = (item) => {
     setCart(prev => ({
       ...prev,
@@ -103,7 +99,6 @@ function ViewOrder() {
   const cartItems = Object.values(cart);
   const cartTotal = cartItems.reduce((sum, i) => sum + i.price * i.qty, 0);
 
-  // Add more items to existing order
   const handleAddMoreItems = async () => {
     if (cartItems.length === 0) return handleError('Select at least one item to add');
     setSubmitting(true);
@@ -117,12 +112,23 @@ function ViewOrder() {
       handleSuccess('Items added to order!');
       setCart({});
       setShowMenu(false);
-      fetchOrder(); // refresh order
+      setMenuSearchTerm('');
+      fetchOrder();
     } catch (err) {
       handleError('Failed to add items');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // Get items to display based on search
+  const getDisplayItems = () => {
+    if (menuSearchTerm.trim()) {
+      return Object.values(menuItems).flat().filter(item =>
+        item.name.toLowerCase().includes(menuSearchTerm.toLowerCase())
+      );
+    }
+    return menuItems[selectedCategory] || [];
   };
 
   if (loading) return <div className="vo-loading">Loading order...</div>;
@@ -166,7 +172,6 @@ function ViewOrder() {
             <span className="vo-total-amount">Rs. {order.totalAmount?.toFixed(0)}</span>
           </div>
 
-          {/* Allergies */}
           {order.allergies && order.allergies.length > 0 && (
             <div className="vo-allergies">
               <h4>⚠️ Allergies</h4>
@@ -178,7 +183,6 @@ function ViewOrder() {
             </div>
           )}
 
-          {/* Notes */}
           {order.notes && (
             <div className="vo-notes">
               <h4>📝 Notes</h4>
@@ -186,8 +190,7 @@ function ViewOrder() {
             </div>
           )}
 
-          {/* Add More Items Button */}
-          <button className="btn-add-more" onClick={() => setShowMenu(!showMenu)}>
+          <button className="btn-add-more" onClick={() => { setShowMenu(!showMenu); setMenuSearchTerm(''); }}>
             {showMenu ? 'Hide Menu' : '+ Add More Items'}
           </button>
         </div>
@@ -197,50 +200,75 @@ function ViewOrder() {
           <div className="vo-menu-panel">
             <h2>Add Items</h2>
 
-            <div className="menu-categories">
-              {Object.keys(menuItems).map(cat => (
-                <button
-                  key={cat}
-                  className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
-                  onClick={() => setSelectedCategory(cat)}
-                >
-                  {cat}
-                </button>
-              ))}
+            {/* Search Bar */}
+            <div className="menu-search" style={{ marginBottom: '12px' }}>
+              <input
+                type="text"
+                value={menuSearchTerm}
+                onChange={e => setMenuSearchTerm(e.target.value)}
+                placeholder="🔍 Search items..."
+                className="menu-search-input"
+              />
+              {menuSearchTerm && (
+                <button className="search-clear-btn" onClick={() => setMenuSearchTerm('')}>✕</button>
+              )}
             </div>
+
+            {/* Categories — hide when searching */}
+            {!menuSearchTerm && (
+              <div className="menu-categories">
+                {Object.keys(menuItems).map(cat => (
+                  <button
+                    key={cat}
+                    className={`category-btn ${selectedCategory === cat ? 'active' : ''}`}
+                    onClick={() => setSelectedCategory(cat)}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
 
             <div className="vo-menu-items">
-              {(menuItems[selectedCategory] || []).map(item => {
-                const inCart = cart[item._id];
-                return (
-                  <div key={item._id} className="vo-menu-item">
-                    <img
-                      src={item.imageUrl?.startsWith('/uploads') ? `${API}${item.imageUrl}` : item.imageUrl}
-                      alt={item.name}
-                      className="vo-menu-item-img"
-                      onError={e => { e.target.src = 'https://via.placeholder.com/60x60?text=No+Image'; }}
-                    />
-                    <div className="vo-menu-item-info">
-                      <span className="vo-menu-item-name">{item.name}</span>
-                      <span className="vo-menu-item-price">Rs. {item.price}</span>
+              {getDisplayItems().length === 0 ? (
+                <p style={{ textAlign: 'center', color: '#aaa', padding: '20px 0' }}>
+                  {menuSearchTerm ? `No items found for "${menuSearchTerm}"` : 'No items in this category'}
+                </p>
+              ) : (
+                getDisplayItems().map(item => {
+                  const inCart = cart[item._id];
+                  return (
+                    <div key={item._id} className="vo-menu-item">
+                      <img
+                        src={item.imageUrl?.startsWith('/uploads') ? `${API}${item.imageUrl}` : item.imageUrl}
+                        alt={item.name}
+                        className="vo-menu-item-img"
+                        onError={e => { e.target.src = 'https://via.placeholder.com/60x60?text=No+Image'; }}
+                      />
+                      <div className="vo-menu-item-info">
+                        <span className="vo-menu-item-name">{item.name}</span>
+                        <span className="vo-menu-item-price">Rs. {item.price}</span>
+                        {menuSearchTerm && (
+                          <span style={{ fontSize: '0.72rem', color: '#f0a500', fontWeight: 600 }}>{item.category}</span>
+                        )}
+                      </div>
+                      <div className="item-controls">
+                        {inCart ? (
+                          <div className="qty-controls">
+                            <button className="qty-btn" onClick={() => decreaseQty(item._id)}><MdRemove /></button>
+                            <span className="qty-num">{inCart.qty}</span>
+                            <button className="qty-btn" onClick={() => addToCart(item)}><MdAdd /></button>
+                          </div>
+                        ) : (
+                          <button className="add-btn" onClick={() => addToCart(item)}>Add</button>
+                        )}
+                      </div>
                     </div>
-                    <div className="item-controls">
-                      {inCart ? (
-                        <div className="qty-controls">
-                          <button className="qty-btn" onClick={() => decreaseQty(item._id)}><MdRemove /></button>
-                          <span className="qty-num">{inCart.qty}</span>
-                          <button className="qty-btn" onClick={() => addToCart(item)}><MdAdd /></button>
-                        </div>
-                      ) : (
-                        <button className="add-btn" onClick={() => addToCart(item)}>Add</button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
 
-            {/* Cart Summary */}
             {cartItems.length > 0 && (
               <div className="vo-cart-summary">
                 <div className="vo-cart-items">

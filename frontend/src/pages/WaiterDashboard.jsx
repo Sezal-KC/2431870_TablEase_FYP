@@ -1,43 +1,34 @@
 // src/pages/WaiterDashboard.jsx
 import React, { useState, useEffect } from 'react';
-
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import { handleSuccess } from '../utils';
-
-
-// React Icons
-import { 
+import {
   MdDashboard, MdReceiptLong, MdNotificationsActive, MdLogout, MdPerson
 } from 'react-icons/md';
-
 import '../css/waiter-dashboard.css';
 
 function WaiterDashboard() {
   const loggedInUser = localStorage.getItem('loggedInUser') || 'Waiter';
   const navigate = useNavigate();
 
-  // State for active tab
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' or 'orders'
-  
-
-  // Fetch real tables
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [tables, setTables] = useState([]);
   const [loadingTables, setLoadingTables] = useState(false);
   const [tableError, setTableError] = useState(null);
+  const [confirmTable, setConfirmTable] = useState(null);
 
   const [stats, setStats] = useState({
-  todaysRevenue: 0,
-  ordersToday: 0,
-  activeTables: '0/0',
-  avgOrderValue: 0,
-  availableTables: 0,
-  occupiedTables: 0
+    todaysRevenue: 0,
+    ordersToday: 0,
+    activeTables: '0/0',
+    avgOrderValue: 0,
+    availableTables: 0,
+    occupiedTables: 0
   });
   const [recentOrders, setRecentOrders] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
-
   const [alerts, setAlerts] = useState([]);
 
   const handleLogout = () => {
@@ -46,7 +37,24 @@ function WaiterDashboard() {
     handleSuccess('Logged out successfully');
   };
 
-  // Socket.io — listen for order ready notifications
+  const fetchTables = async () => {
+    setLoadingTables(true);
+    setTableError(null);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('http://localhost:8080/api/tables', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTables(res.data.data || []);
+    } catch (err) {
+      console.error('Fetch tables error:', err);
+      setTableError('Failed to load tables. Please try again.');
+    } finally {
+      setLoadingTables(false);
+    }
+  };
+
+  // Socket.io
   useEffect(() => {
     const socket = io('http://localhost:8080');
 
@@ -58,9 +66,7 @@ function WaiterDashboard() {
     socket.on('orderPaid', (data) => {
       handleSuccess(`✅ ${data.message}`);
       setAlerts(prev => [`✅ ${data.message}`, ...prev].slice(0, 5));
-      if (activeTab === 'orders') {
-        fetchTables();
-      }
+      fetchTables();
     });
 
     socket.on('itemReady', (data) => {
@@ -73,65 +79,65 @@ function WaiterDashboard() {
 
   // Fetch tables when Orders tab is active
   useEffect(() => {
-    if (activeTab === 'orders') {
-      const fetchTables = async () => {
-        setLoadingTables(true);
-        setTableError(null);
-        try {
-          const token = localStorage.getItem('token');
-          const res = await axios.get('http://localhost:8080/api/tables', {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-          setTables(res.data.data || []);
-        } catch (err) {
-          console.error('Fetch tables error:', err);
-          setTableError('Failed to load tables. Please try again.');
-        } finally {
-          setLoadingTables(false);
-        }
-      };
-
-      fetchTables();
-    }
+    if (activeTab === 'orders') fetchTables();
   }, [activeTab]);
 
   // Fetch real stats
-useEffect(() => {
-  if (activeTab === 'dashboard') {
-    const fetchStats = async () => {
-      setLoadingStats(true);
-      try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:8080/api/orders/stats', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = res.data.data; //Updates the tables state with the data received from the API
-        setStats({
-          todaysRevenue: data.todaysRevenue,
-          ordersToday: data.ordersToday,
-          activeTables: data.activeTables,
-          avgOrderValue: data.avgOrderValue,
-          availableTables: data.availableTables,
-          occupiedTables: data.occupiedTables
-        });
-        setRecentOrders(data.recentOrders || []);
-      } catch (err) {
-        console.error('Stats fetch error:', err);
-      } finally {
-        setLoadingStats(false);
-      }
-    };
-    fetchStats();
-  }
-}, [activeTab]);
+  useEffect(() => {
+    if (activeTab === 'dashboard') {
+      const fetchStats = async () => {
+        setLoadingStats(true);
+        try {
+          const token = localStorage.getItem('token');
+          const res = await axios.get('http://localhost:8080/api/orders/stats', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const data = res.data.data;
+          setStats({
+            todaysRevenue: data.todaysRevenue,
+            ordersToday: data.ordersToday,
+            activeTables: data.activeTables,
+            avgOrderValue: data.avgOrderValue,
+            availableTables: data.availableTables,
+            occupiedTables: data.occupiedTables
+          });
+          setRecentOrders(data.recentOrders || []);
+        } catch (err) {
+          console.error('Stats fetch error:', err);
+        } finally {
+          setLoadingStats(false);
+        }
+      };
+      fetchStats();
+    }
+  }, [activeTab]);
 
+  const handleNewOrder = () => setActiveTab('orders');
 
+  const handleTableClick = (table) => {
+    if (table.status === 'available') {
+      setConfirmTable(table); // show popup
+    } else if (table.status === 'occupied') {
+      navigate(`/new-order/${table.tableNumber}`);
+    } else if (table.status === 'ordered') {
+      navigate(`/view-order/${table.tableNumber}/${table._id}`);
+    }
+  };
 
-  // Switch to Orders tab on "New Order" click
-  const handleNewOrder = () => {
-    setActiveTab('orders');
+  const handleConfirmOccupy = async () => {
+    if (!confirmTable) return;
+    const token = localStorage.getItem('token');
+    try {
+      await axios.patch(
+        `http://localhost:8080/api/tables/${confirmTable._id}/occupy`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    } catch (err) {
+      console.error('Occupy failed:', err);
+    }
+    navigate(`/new-order/${confirmTable.tableNumber}`);
+    setConfirmTable(null);
   };
 
   return (
@@ -144,9 +150,7 @@ useEffect(() => {
         </div>
 
         <div className="user-info">
-          <div className="user-avatar">
-            <MdPerson />
-          </div>
+          <div className="user-avatar"><MdPerson /></div>
           <div>
             <p className="user-name">{loggedInUser}</p>
             <p className="user-role">Waiter</p>
@@ -154,24 +158,21 @@ useEffect(() => {
         </div>
 
         <nav className="sidebar-nav">
-          <button 
+          <button
             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
             onClick={() => setActiveTab('dashboard')}
           >
             <MdDashboard className="icon" /> Dashboard
           </button>
-
-          <button 
+          <button
             className={`nav-item ${activeTab === 'orders' ? 'active' : ''}`}
             onClick={() => setActiveTab('orders')}
           >
             <MdReceiptLong className="icon" /> Orders
           </button>
-
           <a href="#" className="nav-item">
             <MdNotificationsActive className="icon" /> Alerts
           </a>
-
           <button className="nav-item logout" onClick={handleLogout}>
             <MdLogout className="icon" /> Logout
           </button>
@@ -180,6 +181,8 @@ useEffect(() => {
 
       {/* Main Content */}
       <main className="main-content">
+
+        {/* DASHBOARD TAB */}
         {activeTab === 'dashboard' && (
           <>
             <header className="header">
@@ -187,7 +190,6 @@ useEffect(() => {
               <p className="welcome">Welcome back! Here's what's happening today.</p>
             </header>
 
-            {/* Stats Cards */}
             <div className="stats-grid">
               <div className="stat-card revenue">
                 <h3>Today's Revenue</h3>
@@ -207,7 +209,6 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Recent Orders */}
             <section className="recent-orders">
               <h2>Recent Orders</h2>
               <div className="orders-table">
@@ -221,7 +222,6 @@ useEffect(() => {
                       <th>Time</th>
                     </tr>
                   </thead>
-                  
                   <tbody>
                     {recentOrders.length === 0 ? (
                       <tr><td colSpan="5" style={{ textAlign: 'center', color: '#888' }}>No orders yet today</td></tr>
@@ -241,7 +241,6 @@ useEffect(() => {
               </div>
             </section>
 
-            {/* Alerts & Quick Actions */}
             <div className="side-panels">
               <div className="alerts-panel">
                 <h2>Alerts</h2>
@@ -253,17 +252,15 @@ useEffect(() => {
                   ))
                 )}
               </div>
-
               <div className="quick-actions">
                 <h2>Quick Actions</h2>
-                <button className="action-btn" onClick={handleNewOrder}>
-                  New Order
-                </button>
+                <button className="action-btn" onClick={handleNewOrder}>New Order</button>
               </div>
             </div>
           </>
         )}
 
+        {/* ORDERS TAB */}
         {activeTab === 'orders' && (
           <section className="orders-section">
             <header className="header">
@@ -271,7 +268,6 @@ useEffect(() => {
               <p className="welcome">Select a table to create or manage orders</p>
             </header>
 
-            {/* Table Stats */}
             <div className="table-stats">
               <div className="stat-box available">
                 <h3>Available Tables</h3>
@@ -287,7 +283,6 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Table Grid - Always render, handle states inside */}
             <div className="table-grid">
               {loadingTables ? (
                 <p className="loading-message">Loading tables...</p>
@@ -297,31 +292,14 @@ useEffect(() => {
                 <p className="empty-message">No tables found in database.</p>
               ) : (
                 tables.map((table) => (
-                  <div 
-                    key={table._id} 
+                  <div
+                    key={table._id}
                     className={`table-card ${table.status}`}
-                    onClick={() => {
-                      if (table.status === 'available') {
-                        // Mark table as occupied first, then go to new order
-                        const token = localStorage.getItem('token');
-                        axios.patch(`http://localhost:8080/api/tables/${table._id}/occupy`, {}, {
-                          headers: { Authorization: `Bearer ${token}` }
-                        }).then(() => {
-                          navigate(`/new-order/${table.tableNumber}`);
-                        }).catch(() => {
-                          navigate(`/new-order/${table.tableNumber}`);
-                        });
-                      } else if (table.status === 'occupied') {
-                        navigate(`/new-order/${table.tableNumber}`);
-                      } else if (table.status === 'ordered') {
-                        navigate(`/view-order/${table.tableNumber}/${table._id}`);
-                      }
-                    }}
+                    onClick={() => handleTableClick(table)}
                     style={{ cursor: 'pointer' }}
                   >
                     <h3>{table.tableNumber}</h3>
                     <p>{table.seats} seats</p>
-                    
                     <span className="status-label">
                       {table.status.charAt(0).toUpperCase() + table.status.slice(1)}
                     </span>
@@ -330,7 +308,6 @@ useEffect(() => {
               )}
             </div>
 
-            {/* Legend */}
             <div className="legend">
               <h3>Legend:</h3>
               <div className="legend-items">
@@ -340,8 +317,27 @@ useEffect(() => {
               </div>
             </div>
           </section>
-)}
+        )}
       </main>
+
+      {/* Table Confirmation Modal */}
+      {confirmTable && (
+        <div className="modal-overlay" onClick={() => setConfirmTable(null)}>
+          <div className="confirm-modal" onClick={e => e.stopPropagation()}>
+            <div className="confirm-icon">🪑</div>
+            <h3>Mark Table {confirmTable.tableNumber} as Occupied?</h3>
+            <p>This means guests have been seated at this table.</p>
+            <div className="confirm-buttons">
+              <button className="confirm-btn-no" onClick={() => setConfirmTable(null)}>
+                Cancel
+              </button>
+              <button className="confirm-btn-yes" onClick={handleConfirmOccupy}>
+                Yes, Mark Occupied
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
