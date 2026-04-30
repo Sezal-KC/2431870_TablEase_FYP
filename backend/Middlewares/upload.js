@@ -1,35 +1,25 @@
+require('dotenv').config();
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
-const path = require('path');
 
-// Set storage engine
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // save files to uploads folder
-  },
-  filename: function (req, file, cb) {
-    // Rename file: menuitem-TIMESTAMP.EXT
-    cb(null, 'menuitem-' + Date.now() + path.extname(file.originalname));
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Configure Cloudinary storage for multer
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'tablease-menu',      // folder name in Cloudinary
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    transformation: [{ width: 500, height: 400, crop: 'fill' }] // auto resize
   }
 });
 
-// File filter - only images
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif/;
-  const extName = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimeType = allowedTypes.test(file.mimetype);
-  
-  if (extName && mimeType) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only images are allowed'));
-  }
-};
-
-// Init upload
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: { fileSize: 20 * 1024 * 1024 } // max 20 mb
-});
+const upload = multer({ storage });
 
 module.exports = upload;

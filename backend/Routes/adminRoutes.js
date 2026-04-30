@@ -81,10 +81,12 @@ router.delete('/menu/:id', async (req, res) => {
   } catch { res.status(500).json({ success: false, message: 'Failed to delete item' }); }
 });
 
-// Upload image
-router.post('/upload', upload.single('image'), (req, res) => {
+
+// Upload image to Cloudinary
+router.post('/upload', authMiddleware, requireAdmin, upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
-  const imageUrl = `http://localhost:8080/uploads/${req.file.filename}`;
+  // Cloudinary returns the URL directly in req.file.path
+  const imageUrl = req.file.path;
   res.json({ success: true, imageUrl });
 });
 
