@@ -197,10 +197,10 @@ function AdminDashboard() {
     <div className="admin-layout">
       <aside className="admin-sidebar">
         <div className="admin-brand">
-          <span className="brand-icon">🍽️</span>
+          <img src="/src/assets/logo.jpg" alt="TablEase" className="sidebar-logo" />
           <div>
             <div className="brand-name">TablEase</div>
-            <div className="brand-role">Admin Panel</div>
+            <div className="brand-role">Welcome, {localStorage.getItem('loggedInUser') || 'Admin'}</div>
           </div>
         </div>
         <nav className="admin-nav">

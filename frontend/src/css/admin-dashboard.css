@@ -330,3 +330,12 @@
   transition: background 0.2s;
 }
 .btn-upload:hover { background: #f0a500; }
+
+.sidebar-logo {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #f0a500;
+  margin-bottom: 8px;
+}

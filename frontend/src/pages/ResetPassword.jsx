@@ -14,7 +14,11 @@ function ResetPassword() {
     e.preventDefault();
     if (!form.password || !form.confirmPassword) return handleError('All fields are required');
     if (form.password !== form.confirmPassword) return handleError('Passwords do not match');
-    if (form.password.length < 6) return handleError('Password must be at least 6 characters');
+    
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(form.password)) {
+      return handleError('Password must be at least 8 characters with uppercase, lowercase, number and special character (@$!%*?&)');
+    }
 
     setLoading(true);
     try {

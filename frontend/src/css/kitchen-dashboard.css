@@ -742,3 +742,11 @@
   background: #f0a500;
   color: white;
 }
+
+.kitchen-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #f0a500;
+}

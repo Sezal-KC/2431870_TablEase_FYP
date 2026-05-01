@@ -170,10 +170,10 @@ function ManagerDashboard() {
       {/* Sidebar */}
       <aside className="manager-sidebar">
         <div className="manager-brand">
-          <span>📊</span>
+          <img src="/src/assets/logo.jpg" alt="TablEase" className="sidebar-logo" />
           <div>
             <div className="manager-brand-name">TablEase</div>
-            <div className="manager-brand-role">Manager Panel</div>
+            <div className="manager-brand-role">Welcome, {localStorage.getItem('loggedInUser') || 'Manager'}</div>
           </div>
         </div>
         <nav className="manager-nav">

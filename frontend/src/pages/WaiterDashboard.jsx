@@ -145,6 +145,7 @@ function WaiterDashboard() {
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
+          <img src="/src/assets/logo.jpg" alt="TablEase" className="sidebar-logo" />
           <h2>TablEase</h2>
           <p>Restaurant POS</p>
         </div>
@@ -187,7 +188,7 @@ function WaiterDashboard() {
           <>
             <header className="header">
               <h1>Dashboard</h1>
-              <p className="welcome">Welcome back! Here's what's happening today.</p>
+              <p className="welcome">Welcome back, <strong>{loggedInUser}</strong>! Here's what's happening today.</p>
             </header>
 
             <div className="stats-grid">

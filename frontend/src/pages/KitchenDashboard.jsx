@@ -219,10 +219,10 @@ function KitchenDashboard() {
       {/* Header */}
       <header className="kitchen-header">
         <div className="kitchen-brand">
-          <span>🍳</span>
+          <img src="/src/assets/logo.jpg" alt="TablEase" className="kitchen-logo" onError={e => { e.target.style.display='none'; }} />
           <div>
             <h1>Kitchen Display</h1>
-            <p>TablEase POS</p>
+            <p>Welcome, {localStorage.getItem('loggedInUser') || 'Kitchen Staff'}</p>
           </div>
         </div>
         <div className="kitchen-header-right">

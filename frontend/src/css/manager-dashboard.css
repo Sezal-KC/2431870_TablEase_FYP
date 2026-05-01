@@ -417,3 +417,11 @@
   transition: background 0.2s;
 }
 .btn-confirm-restock:hover { background: #d4920a; }
+
+.sidebar-logo {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #f0a500;
+}

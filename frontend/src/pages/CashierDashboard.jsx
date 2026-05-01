@@ -292,10 +292,10 @@ function CashierDashboard() {
       {/* Header */}
       <header className="cashier-header">
         <div className="cashier-brand">
-          <span>💰</span>
+          <img src="/src/assets/logo.jpg" alt="TablEase" className="cashier-logo" onError={e => { e.target.style.display='none'; }} />
           <div>
             <h1>Cashier Dashboard</h1>
-            <p>TablEase POS</p>
+            <p>Welcome, {localStorage.getItem('loggedInUser') || 'Cashier'}</p>
           </div>
         </div>
         <div className="cashier-header-right">

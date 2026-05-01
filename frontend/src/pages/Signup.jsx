@@ -34,8 +34,9 @@ function Signup() {
       return handleError('Passwords do not match');
     }
 
-    if (password.length < 6) {
-      return handleError('Password must be at least 6 characters');
+   
+    if (!passwordRegex.test(password)) {
+      return handleError('Password must be at least 8 characters with uppercase, lowercase, number and special character (@$!%*?&)');
     }
 
     try {

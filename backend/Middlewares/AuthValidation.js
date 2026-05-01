@@ -25,11 +25,13 @@ const signupValidation = (req, res, next) => {
       }),
 
     password: Joi.string()
-      .min(6)
+      .min(8)
       .max(100)
+      .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
       .required()
       .messages({
-        'string.min': 'Password must be at least 6 characters long',
+        'string.min': 'Password must be at least 8 characters',
+        'string.pattern.base': 'Password must contain uppercase, lowercase, number and special character (@$!%*?&)',
         'any.required': 'Password is required'
       }),
 
