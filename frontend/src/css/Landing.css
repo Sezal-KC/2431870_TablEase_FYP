@@ -150,16 +150,22 @@ body {
 }
 
 .feature-icon {
-  width: 90px;
-  height: 90px;
-  background: #fff0d9;
-  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 30px;
-  font-size: 3.5rem;
-  box-shadow: 0 5px 15px rgba(255, 140, 66, 0.2);
+  width: 70px;
+  height: 70px;
+  background: #fff3e0;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+  color: #ff8c42;
+}
+
+.contact-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff8c42;
 }
 
 .feature-title {

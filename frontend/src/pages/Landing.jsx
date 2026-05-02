@@ -1,7 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import '../css/Landing.css';  
+import '../css/Landing.css';
 import logo from '../assets/logo.jpg';
+import {
+  MdReceiptLong,
+  MdPayment,
+  MdInventory,
+  MdPeople,
+  MdBarChart,
+  MdBolt,
+  MdEmail,
+  MdPhone
+} from 'react-icons/md';
 
 function Landing() {
   return (
@@ -12,7 +22,6 @@ function Landing() {
           <img src={logo} alt="TablEase Logo" className="hero-logo" />
           <h1 className="hero-title">TablEase</h1>
           <p className="hero-subtitle">Where Order Meets Ease</p>
-
           <div className="hero-buttons">
             <Link to="/login" className="btn btn-primary">Login to Dashboard</Link>
             <Link to="/signup" className="btn btn-secondary">Create Account</Link>
@@ -25,9 +34,9 @@ function Landing() {
         <div className="container">
           <h2>About TablEase</h2>
           <p>
-            TablEase is a modern web-based Point of Sale system designed for small to medium restaurants. 
-            It helps waiters take orders quickly, sync with the kitchen in real-time, track inventory automatically, 
-            handle billing with cash or digital payments (Khalti/eSewa), and manage your team with secure role-based access 
+            TablEase is a modern web-based Point of Sale system designed for small to medium restaurants.
+            It helps waiters take orders quickly, sync with the kitchen in real-time, track inventory automatically,
+            handle billing with cash or digital payments (eSewa), and manage your team with secure role-based access
             for Waiter, Cashier, Manager, Admin, and Kitchen Staff.
           </p>
         </div>
@@ -39,7 +48,7 @@ function Landing() {
           <h2>Powerful Features</h2>
           <div className="features-grid">
             <div className="feature-card">
-              <div className="feature-icon">📋</div>
+              <div className="feature-icon"><MdReceiptLong size={36} /></div>
               <h3 className="feature-title">Fast Order Management</h3>
               <p className="feature-desc">
                 Quick order entry, real-time kitchen sync, special notes & allergy alerts.
@@ -47,15 +56,15 @@ function Landing() {
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">💳</div>
+              <div className="feature-icon"><MdPayment size={36} /></div>
               <h3 className="feature-title">Smart Billing</h3>
               <p className="feature-desc">
-                Cash, QR (Khalti/eSewa), split bills, receipts & instant verification.
+                Cash, QR, eSewa payments, VAT bills, receipts & instant verification.
               </p>
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">📦</div>
+              <div className="feature-icon"><MdInventory size={36} /></div>
               <h3 className="feature-title">Inventory Control</h3>
               <p className="feature-desc">
                 Auto stock deduction on order confirmation + low-stock alerts.
@@ -63,7 +72,7 @@ function Landing() {
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">👥</div>
+              <div className="feature-icon"><MdPeople size={36} /></div>
               <h3 className="feature-title">Role-Based Access</h3>
               <p className="feature-desc">
                 Secure dashboards for Waiter, Cashier, Manager, Admin & Kitchen Staff.
@@ -71,7 +80,7 @@ function Landing() {
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">📊</div>
+              <div className="feature-icon"><MdBarChart size={36} /></div>
               <h3 className="feature-title">Reports & Analytics</h3>
               <p className="feature-desc">
                 Sales reports, daily/weekly insights, top-selling items & more.
@@ -79,7 +88,7 @@ function Landing() {
             </div>
 
             <div className="feature-card">
-              <div className="feature-icon">⚡</div>
+              <div className="feature-icon"><MdBolt size={36} /></div>
               <h3 className="feature-title">Real-Time Sync</h3>
               <p className="feature-desc">
                 Instant updates between front-of-house, kitchen, and management.
@@ -98,14 +107,14 @@ function Landing() {
           </p>
           <div className="contact-info">
             <div className="contact-item">
-              <span className="contact-icon">📧</span>
+              <span className="contact-icon"><MdEmail size={28} /></span>
               <div>
                 <p>Email</p>
                 <a href="mailto:support@tablEase.com">support@tablEase.com</a>
               </div>
             </div>
             <div className="contact-item">
-              <span className="contact-icon">☎</span>
+              <span className="contact-icon"><MdPhone size={28} /></span>
               <div>
                 <p>Phone</p>
                 <a href="tel:+9779801234567">+977-980-1234567</a>
