@@ -750,3 +750,39 @@
   border-radius: 50%;
   border: 2px solid #f0a500;
 }
+
+@media (max-width: 1024px) {
+  .kitchen-columns { grid-template-columns: 1fr; }
+  .recipes-layout { grid-template-columns: 1fr; }
+  .recipes-menu-list { max-height: 300px; }
+}
+
+@media (max-width: 768px) {
+  .kitchen-header {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+  .kitchen-header-right {
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+  .kitchen-brand h1 { font-size: 1.1rem; }
+  .kitchen-tabs { flex-wrap: wrap; }
+  .kitchen-tab-btn { padding: 6px 10px; font-size: 0.78rem; }
+  .kitchen-main { padding: 16px; }
+  .kitchen-columns { grid-template-columns: 1fr; gap: 16px; }
+  .orders-list { max-height: none; }
+  .batch-grid { grid-template-columns: 1fr; }
+  .recipes-layout { grid-template-columns: 1fr; }
+  .recipe-ingredient-row { flex-wrap: wrap; }
+  .last-refresh { display: none; }
+  .count-badge { font-size: 0.75rem; padding: 4px 10px; }
+}
+
+@media (max-width: 480px) {
+  .kitchen-header { padding: 10px 12px; }
+  .order-item { flex-wrap: wrap; gap: 6px; }
+  .kitchen-brand h1 { font-size: 1rem; }
+}

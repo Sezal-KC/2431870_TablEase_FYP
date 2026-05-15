@@ -87,3 +87,22 @@
   margin-top: 8px;
   font-size: 13px;
 }
+
+@media (max-width: 768px) {
+  .auth-card {
+    padding: 16px 18px;
+    max-width: 100%;
+  }
+  .auth-card h1 { font-size: 20px; }
+  .name-row { flex-direction: column; gap: 0; }
+  .form-group input, .form-group select { font-size: 13px; }
+}
+
+@media (max-width: 480px) {
+  .auth-container { padding: 8px; }
+  .auth-card { padding: 14px 14px; border-radius: 10px; }
+  .auth-card h1 { font-size: 18px; margin-bottom: 10px; }
+  .form-group { margin-bottom: 8px; }
+  .submit-btn { padding: 9px; font-size: 13px; }
+  .switch-link { font-size: 12px; }
+}

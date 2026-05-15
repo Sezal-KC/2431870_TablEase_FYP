@@ -272,3 +272,27 @@ footer {
   text-align: center;
   font-size: 1.2rem;
 }
+
+@media (max-width: 768px) {
+  .hero { padding: 60px 0; }
+  .hero-title { font-size: 2.8rem; }
+  .hero-subtitle { font-size: 1.2rem; }
+  .btn { padding: 14px 30px; font-size: 1rem; }
+  .about h2, .features h2, .contact h2, .cta h2 { font-size: 2.2rem; }
+  .about p, .cta p { font-size: 1rem; }
+  .features-grid { grid-template-columns: 1fr; gap: 24px; }
+  .feature-card { padding: 30px 20px; }
+  .feature-title { font-size: 1.4rem; }
+  .contact-info { gap: 40px; flex-direction: column; align-items: center; }
+  .contact-item { font-size: 1rem; }
+  .cta-buttons { gap: 20px; }
+  .hero-buttons { gap: 16px; }
+  .hero-logo { width: 120px; height: 120px; }
+}
+
+@media (max-width: 480px) {
+  .hero-title { font-size: 2rem; }
+  .hero-subtitle { font-size: 1rem; }
+  .about h2, .features h2, .contact h2, .cta h2 { font-size: 1.8rem; }
+  .btn { padding: 12px 24px; font-size: 0.95rem; }
+}

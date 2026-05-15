@@ -137,3 +137,11 @@
   color: #ff5f1f;
   text-decoration: underline;
 }
+
+@media (max-width: 480px) {
+  .auth-container { padding: 16px; }
+  .auth-card { padding: 24px 20px; }
+  .auth-card h1 { font-size: 24px; }
+  .form-group input, .form-group select { font-size: 13px; padding: 9px 10px; }
+  .submit-btn { font-size: 14px; padding: 11px; }
+}

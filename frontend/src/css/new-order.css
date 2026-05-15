@@ -356,3 +356,47 @@
   font-weight: 600;
   margin-top: 2px;
 }
+
+@media (max-width: 1024px) {
+  .new-order-layout { grid-template-columns: 1fr 300px; gap: 20px; }
+  .menu-items { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+}
+
+@media (max-width: 768px) {
+  .new-order-page { padding: 16px; }
+  .new-order-header { gap: 12px; margin-bottom: 20px; }
+  .new-order-header h1 { font-size: 1.3rem; }
+  .new-order-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .order-summary {
+    position: static;
+    order: -1;
+  }
+  .menu-items { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .menu-item-image { height: 110px; }
+  .category-btn { padding: 7px 16px; font-size: 0.82rem; }
+  .menu-search-input { font-size: 0.85rem; padding: 9px 36px 9px 14px; }
+  .allergy-tags { gap: 4px; }
+  .allergy-tag { padding: 4px 10px; font-size: 0.75rem; }
+  .custom-allergy-input { flex-wrap: wrap; }
+  .custom-allergy-input input { min-width: 0; }
+}
+
+@media (max-width: 480px) {
+  .new-order-page { padding: 10px; }
+  .new-order-header h1 { font-size: 1.1rem; }
+  .new-order-layout { gap: 14px; }
+  .menu-items { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .menu-item-image { height: 90px; }
+  .item-info h3 { font-size: 0.82rem; }
+  .item-price { font-size: 0.8rem; }
+  .order-summary { padding: 16px; }
+  .order-summary h2 { font-size: 1rem; }
+  .total-amount { font-size: 1.1rem; }
+  .submit-order-btn { padding: 12px; font-size: 0.92rem; }
+  .back-btn { padding: 8px 12px; font-size: 0.82rem; }
+  .cart-item { padding: 8px 10px; }
+  .cart-item-name { font-size: 0.82rem; }
+}
