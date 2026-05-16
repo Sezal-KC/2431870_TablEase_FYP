@@ -499,6 +499,125 @@
   .side-panels { grid-template-columns: 1fr; }
 }
 
+.view-all-alerts-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 8px;
+  background: none;
+  border: 1px dashed #ff8c42;
+  color: #ff8c42;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.view-all-alerts-btn:hover { background: #fff3e0; }
+
+.alerts-count-badge {
+  background: #e74c3c;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: auto;
+  min-width: 18px;
+  text-align: center;
+}
+
+.alerts-full-panel {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  border: 1px solid #f0e6d2;
+}
+
+.alerts-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  color: #aaa;
+  gap: 12px;
+  font-size: 0.95rem;
+}
+.alerts-empty span { font-size: 3rem; }
+
+.alerts-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.alerts-total {
+  font-size: 0.88rem;
+  color: #888;
+  font-weight: 600;
+}
+
+.clear-alerts-btn {
+  background: #fdecea;
+  color: #e74c3c;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.clear-alerts-btn:hover { background: #e74c3c; color: white; }
+
+.alerts-full-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.alert-full-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #fff3cd;
+  border-radius: 10px;
+  border-left: 4px solid #ff8c42;
+}
+
+.alert-full-icon { font-size: 1.4rem; flex-shrink: 0; }
+
+.alert-full-content { flex: 1; }
+
+.alert-full-message {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #5a3e00;
+  margin: 0 0 4px;
+}
+
+.alert-full-time {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.alert-dismiss-btn {
+  background: none;
+  border: none;
+  color: #aaa;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+.alert-dismiss-btn:hover { color: #e74c3c; }
+
 @media (max-width: 768px) {
   .waiter-dashboard { flex-direction: column; }
   .sidebar {

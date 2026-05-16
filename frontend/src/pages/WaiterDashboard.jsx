@@ -60,18 +60,18 @@ function WaiterDashboard() {
 
     socket.on('orderReady', (data) => {
       handleSuccess(`🍽️ ${data.message}`);
-      setAlerts(prev => [`🍽️ ${data.message}`, ...prev].slice(0, 5));
+      setAlerts(prev => [`🍽️ ${data.message}`, ...prev]);
     });
 
     socket.on('orderPaid', (data) => {
       handleSuccess(`✅ ${data.message}`);
-      setAlerts(prev => [`✅ ${data.message}`, ...prev].slice(0, 5));
+      setAlerts(prev => [`✅ ${data.message}`, ...prev]);
       fetchTables();
     });
 
     socket.on('itemReady', (data) => {
       handleSuccess(`🍽️ ${data.message}`);
-      setAlerts(prev => [`🍽️ ${data.message}`, ...prev].slice(0, 5));
+      setAlerts(prev => [`🍽️ ${data.message}`, ...prev]);
     });
 
     return () => socket.disconnect();
@@ -116,7 +116,7 @@ function WaiterDashboard() {
 
   const handleTableClick = (table) => {
     if (table.status === 'available') {
-      setConfirmTable(table); // show popup
+      setConfirmTable(table);
     } else if (table.status === 'occupied') {
       navigate(`/new-order/${table.tableNumber}`);
     } else if (table.status === 'ordered') {
@@ -171,9 +171,16 @@ function WaiterDashboard() {
           >
             <MdReceiptLong className="icon" /> Orders
           </button>
-          <a href="#" className="nav-item">
-            <MdNotificationsActive className="icon" /> Alerts
-          </a>
+          <button
+            className={`nav-item ${activeTab === 'alerts' ? 'active' : ''}`}
+            onClick={() => setActiveTab('alerts')}
+          >
+            <MdNotificationsActive className="icon" />
+            Alerts
+            {alerts.length > 0 && (
+              <span className="alerts-count-badge">{alerts.length}</span>
+            )}
+          </button>
           <button className="nav-item logout" onClick={handleLogout}>
             <MdLogout className="icon" /> Logout
           </button>
@@ -244,13 +251,21 @@ function WaiterDashboard() {
 
             <div className="side-panels">
               <div className="alerts-panel">
-                <h2>Alerts</h2>
+                <h2>Recent Alerts</h2>
                 {alerts.length === 0 ? (
                   <div className="alert-item">No alerts right now</div>
                 ) : (
-                  alerts.map((alert, i) => (
+                  alerts.slice(0, 5).map((alert, i) => (
                     <div key={i} className="alert-item">{alert}</div>
                   ))
+                )}
+                {alerts.length > 5 && (
+                  <button
+                    className="view-all-alerts-btn"
+                    onClick={() => setActiveTab('alerts')}
+                  >
+                    View all {alerts.length} alerts →
+                  </button>
                 )}
               </div>
               <div className="quick-actions">
@@ -316,6 +331,58 @@ function WaiterDashboard() {
                 <div><span className="legend-color occupied"></span> Occupied (Seated)</div>
                 <div><span className="legend-color ordered"></span> Order Placed</div>
               </div>
+            </div>
+          </section>
+        )}
+
+        {/* ALERTS TAB */}
+        {activeTab === 'alerts' && (
+          <section className="orders-section">
+            <header className="header">
+              <h1>Alerts</h1>
+              <p className="welcome">All notifications from kitchen and cashier</p>
+            </header>
+
+            <div className="alerts-full-panel">
+              {alerts.length === 0 ? (
+                <div className="alerts-empty">
+                  <span>🔔</span>
+                  <p>No alerts yet. Kitchen and cashier notifications will appear here.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="alerts-toolbar">
+                    <span className="alerts-total">
+                      {alerts.length} notification{alerts.length > 1 ? 's' : ''}
+                    </span>
+                    <button
+                      className="clear-alerts-btn"
+                      onClick={() => setAlerts([])}
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  <div className="alerts-full-list">
+                    {alerts.map((alert, i) => (
+                      <div key={i} className="alert-full-item">
+                        <div className="alert-full-icon">
+                          {alert.includes('paid') || alert.includes('✅') ? '✅' : '🍽️'}
+                        </div>
+                        <div className="alert-full-content">
+                          <p className="alert-full-message">{alert}</p>
+                          <span className="alert-full-time">This session</span>
+                        </div>
+                        <button
+                          className="alert-dismiss-btn"
+                          onClick={() => setAlerts(prev => prev.filter((_, idx) => idx !== i))}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </section>
         )}
