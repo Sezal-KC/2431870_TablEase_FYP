@@ -382,7 +382,7 @@ function AdminDashboard() {
                     <img
                       src={item.imageUrl || 'https://via.placeholder.com/300x180?text=No+Image'}
                       alt={item.name}
-                      onError={e => { e.target.src = 'https://via.placeholder.com/300x180?text=No+Image'; }}
+                      onError={e => { e.target.src = 'https://placehold.co/300x200?text=No+Image'; }}
                     />
 
                     <div className="menu-card-body">

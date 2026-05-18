@@ -244,7 +244,7 @@ function ViewOrder() {
                         src={item.imageUrl?.startsWith('/uploads') ? `${API}${item.imageUrl}` : item.imageUrl}
                         alt={item.name}
                         className="vo-menu-item-img"
-                        onError={e => { e.target.src = 'https://via.placeholder.com/60x60?text=No+Image'; }}
+                        onError={e => { e.target.src = 'https://placehold.co/300x200?text=No+Image'; }}
                       />
                       <div className="vo-menu-item-info">
                         <span className="vo-menu-item-name">{item.name}</span>

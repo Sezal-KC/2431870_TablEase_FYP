@@ -147,8 +147,7 @@ function NewOrder() {
         <img
           src={item.imageUrl?.startsWith('/uploads') ? `${API}${item.imageUrl}` : item.imageUrl}
           alt={item.name}
-          className="menu-item-image"
-          onError={e => { e.target.src = 'https://via.placeholder.com/300x200?text=No+Image'; }}
+          className="menu-item-image"onError={e => { e.target.src = 'https://placehold.co/300x200?text=No+Image'; }}
         />
         <div className="item-info">
           <h3>{item.name}</h3>
