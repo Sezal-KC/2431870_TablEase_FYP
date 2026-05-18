@@ -23,7 +23,8 @@ ChartJS.register(
   PointElement, LineElement
 );
 
-const API = 'http://localhost:8080';
+//const API = 'http://localhost:8080';
+import API from '../config';
 
 function ManagerDashboard() {
   const [activeTab, setActiveTab] = useState('stock');

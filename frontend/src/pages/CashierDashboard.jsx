@@ -5,7 +5,7 @@ import { MdLogout, MdRefresh, MdClose, MdCheck, MdReceipt, MdPrint, MdPointOfSal
 import '../css/cashier-dashboard.css';
 import CryptoJS from 'crypto-js';
 
-const API = 'http://localhost:8080';
+import API from '../config';
 const ESEWA_SECRET = '8gBm/:&EnhH.1/q';
 const ESEWA_PRODUCT_CODE = 'EPAYTEST';
 const ESEWA_URL = 'https://rc-epay.esewa.com.np/api/epay/main/v2/form';

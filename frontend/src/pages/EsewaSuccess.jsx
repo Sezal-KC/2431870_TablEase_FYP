@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API = 'http://localhost:8080';
+// const API = 'http://localhost:8080';
+import API from '../config';
 
 function EsewaSuccess() {
   const [searchParams] = useSearchParams();

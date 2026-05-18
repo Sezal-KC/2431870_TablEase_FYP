@@ -5,7 +5,8 @@ import { MdArrowBack, MdAdd, MdRemove, MdDelete } from 'react-icons/md';
 import { handleSuccess, handleError } from '../utils';
 import '../css/view-order.css';
 
-const API = 'http://localhost:8080';
+//const API = 'http://localhost:8080';
+import API from '../config';
 
 const STATUS_COLORS = {
   pending: '#f39c12',

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { handleError, handleSuccess } from '../utils';
 import '../css/login.css';  
+import API from '../config';
 
 function Login({ setAuth }) {
   const [loginInfo, setLoginInfo] = useState({ email: '', password: '', role: '' });
@@ -25,7 +26,7 @@ function Login({ setAuth }) {
 
     try {
       setLoading(true);
-      const url = "http://localhost:8080/auth/login";
+      const url = `${API}/auth/login`;
       const response = await fetch(url, {
         method: "POST",
         headers: { 'Content-Type': 'application/json' },

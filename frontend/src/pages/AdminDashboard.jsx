@@ -7,7 +7,9 @@ import {
 } from 'react-icons/md';
 import '../css/admin-dashboard.css';
 
-const API = 'http://localhost:8080';
+import API from '../config';
+
+//const API = 'http://localhost:8080';
 
 function AdminDashboard() {
 

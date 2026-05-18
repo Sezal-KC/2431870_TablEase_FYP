@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { handleSuccess, handleError } from '../utils';
 
+import API from '../config';
+
 function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -22,7 +24,7 @@ function VerifyEmail() {
     const verifyEmail = async () => {
       try {
         const response = await fetch(
-          `http://localhost:8080/auth/verify-email?token=${token}&email=${email}`
+          `${API}/auth/verify-email?token=${token}&email=${email}`
         );
         const result = await response.json();
 

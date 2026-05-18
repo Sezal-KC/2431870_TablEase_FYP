@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { handleError, handleSuccess } from '../utils';
 import axios from 'axios';
 import '../css/verify-Otp.css';
+import API from '../config';
+
 
 function VerifyOTP() {
   const location = useLocation();
@@ -55,7 +57,7 @@ function VerifyOTP() {
 
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:8080/auth/verify-email', {
+      const res = await axios.post(`${API}/auth/verify-email`, {
         email,
         otp: otpString
       });

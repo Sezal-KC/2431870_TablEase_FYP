@@ -9,6 +9,8 @@ import {
 } from 'react-icons/md';
 import '../css/waiter-dashboard.css';
 
+import API from '../config';
+
 function WaiterDashboard() {
   const loggedInUser = localStorage.getItem('loggedInUser') || 'Waiter';
   const navigate = useNavigate();
@@ -42,7 +44,7 @@ function WaiterDashboard() {
     setTableError(null);
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('http://localhost:8080/api/tables', {
+      const res = await axios.get(`${API}/api/tables`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTables(res.data.data || []);
@@ -56,7 +58,7 @@ function WaiterDashboard() {
 
   // Socket.io
   useEffect(() => {
-    const socket = io('http://localhost:8080');
+    const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:8080');
 
     socket.on('orderReady', (data) => {
       handleSuccess(`🍽️ ${data.message}`);
@@ -89,7 +91,7 @@ function WaiterDashboard() {
         setLoadingStats(true);
         try {
           const token = localStorage.getItem('token');
-          const res = await axios.get('http://localhost:8080/api/orders/stats', {
+          const res = await axios.get(`${API}/api/orders/stats`, {
             headers: { Authorization: `Bearer ${token}` }
           });
           const data = res.data.data;
@@ -129,7 +131,7 @@ function WaiterDashboard() {
     const token = localStorage.getItem('token');
     try {
       await axios.patch(
-        `http://localhost:8080/api/tables/${confirmTable._id}/occupy`,
+        `${API}/api/tables/${confirmTable._id}/occupy`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

@@ -4,7 +4,9 @@ import { handleSuccess, handleError } from '../utils';
 import { MdLogout, MdRefresh, MdAdd, MdDelete, MdBook, MdTableRestaurant } from 'react-icons/md';
 import '../css/kitchen-dashboard.css';
 
-const API = 'http://localhost:8080';
+//const API = 'http://localhost:8080';
+
+import API from '../config';
 
 const STATUS_CONFIG = {
   pending: { label: 'New Order', next: 'preparing', nextLabel: 'Start Preparing' },

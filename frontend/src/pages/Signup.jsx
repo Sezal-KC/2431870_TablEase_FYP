@@ -4,6 +4,8 @@ import { ToastContainer } from 'react-toastify';
 import { handleError, handleSuccess } from '../utils';
 import '../css/signup.css';
 
+import API from '../config';
+
 function Signup() {
   const [signupInfo, setSignupInfo] = useState({
     firstName: '',
@@ -41,7 +43,7 @@ function Signup() {
 
     try {
       setLoading(true);
-      const url = "http://localhost:8080/auth/signup";
+      const url = `${API}/auth/signup`;
       const response = await fetch(url, {
         method: "POST",
         headers: { 'Content-Type': 'application/json' },
