@@ -4,6 +4,7 @@ import { handleSuccess, handleError } from '../utils';
 import { MdLogout, MdRefresh, MdClose, MdCheck, MdReceipt, MdPrint, MdPointOfSale } from 'react-icons/md';
 import '../css/cashier-dashboard.css';
 import CryptoJS from 'crypto-js';
+import logo from '../assets/logo.jpg';
 
 import API from '../config';
 const ESEWA_SECRET = '8gBm/:&EnhH.1/q';
@@ -292,7 +293,7 @@ function CashierDashboard() {
       {/* Header */}
       <header className="cashier-header">
         <div className="cashier-brand">
-          <img src="/src/assets/logo.jpg" alt="TablEase" className="cashier-logo" onError={e => { e.target.style.display='none'; }} />
+          <img src={logo} alt="TablEase" className="cashier-logo" onError={e => { e.target.style.display='none'; }} />
           <div>
             <h1>Cashier Dashboard</h1>
             <p>Welcome, {localStorage.getItem('loggedInUser') || 'Cashier'}</p>

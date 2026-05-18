@@ -16,6 +16,7 @@ import {
 } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import '../css/manager-dashboard.css';
+import logo from '../assets/logo.jpg';
 
 ChartJS.register(
   CategoryScale, LinearScale, BarElement,
@@ -171,7 +172,7 @@ function ManagerDashboard() {
       {/* Sidebar */}
       <aside className="manager-sidebar">
         <div className="manager-brand">
-          <img src="/src/assets/logo.jpg" alt="TablEase" className="sidebar-logo" />
+          <img src={logo} alt="TablEase" className="sidebar-logo" />
           <div>
             <div className="manager-brand-name">TablEase</div>
             <div className="manager-brand-role">Welcome, {localStorage.getItem('loggedInUser') || 'Manager'}</div>

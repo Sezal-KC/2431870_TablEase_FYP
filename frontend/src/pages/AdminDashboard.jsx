@@ -6,6 +6,7 @@ import {
   MdEdit, MdDelete, MdClose, MdCheck, MdKitchen
 } from 'react-icons/md';
 import '../css/admin-dashboard.css';
+import logo from '../assets/logo.jpg';
 
 import API from '../config';
 

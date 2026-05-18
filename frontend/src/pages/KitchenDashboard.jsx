@@ -3,6 +3,7 @@ import axios from 'axios';
 import { handleSuccess, handleError } from '../utils';
 import { MdLogout, MdRefresh, MdAdd, MdDelete, MdBook, MdTableRestaurant } from 'react-icons/md';
 import '../css/kitchen-dashboard.css';
+import logo from '../assets/logo.jpg';
 
 //const API = 'http://localhost:8080';
 
@@ -221,7 +222,7 @@ function KitchenDashboard() {
       {/* Header */}
       <header className="kitchen-header">
         <div className="kitchen-brand">
-          <img src="/src/assets/logo.jpg" alt="TablEase" className="kitchen-logo" onError={e => { e.target.style.display='none'; }} />
+          <img src={logo} alt="TablEase" className="kitchen-logo" onError={e => { e.target.style.display='none'; }} />
           <div>
             <h1>Kitchen Display</h1>
             <p>Welcome, {localStorage.getItem('loggedInUser') || 'Kitchen Staff'}</p>

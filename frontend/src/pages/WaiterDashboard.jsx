@@ -8,6 +8,8 @@ import {
   MdDashboard, MdReceiptLong, MdNotificationsActive, MdLogout, MdPerson
 } from 'react-icons/md';
 import '../css/waiter-dashboard.css';
+import logo from '../assets/logo.jpg';
+
 
 import API from '../config';
 
@@ -147,7 +149,7 @@ function WaiterDashboard() {
       {/* Sidebar */}
       <aside className="sidebar">
         <div className="sidebar-header">
-          <img src="/src/assets/logo.jpg" alt="TablEase" className="sidebar-logo" />
+          <img src={logo} alt="TablEase" className="sidebar-logo" />
           <h2>TablEase</h2>
           <p>Restaurant POS</p>
         </div>
