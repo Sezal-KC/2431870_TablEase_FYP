@@ -259,12 +259,13 @@
 }
 
 .order-allergies {
+  color: white;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 6px;
   padding: 8px 16px;
-  background: #a72e2e;
+  background: #982b2b;
 }
 
 
@@ -308,7 +309,7 @@
 
 
 .action-btn.pending:hover { 
-  background: #c55b51 !important; 
+  background: #5951c5 !important; 
 }
 
 

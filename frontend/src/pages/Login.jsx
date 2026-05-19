@@ -38,7 +38,7 @@ function Login({ setAuth }) {
 
       if (success) {
 
-        // List of allowed roles (must match your backend)
+        // List of allowed roles 
         const allowedRoles = ['waiter', 'cashier', 'manager', 'admin', 'kitchen_staff'];
 
         if (!allowedRoles.includes(role)) {

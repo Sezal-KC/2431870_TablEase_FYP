@@ -308,7 +308,7 @@ function AdminDashboard() {
 
         {/* Brand / Logo */}
         <div className="admin-brand">
-          <img src="/src/assets/logo.jpg" alt="TablEase" className="sidebar-logo" />
+          <img src={logo} alt="TablEase" className="sidebar-logo" />
           <div>
             <div className="brand-name">TablEase</div>
             <div className="brand-role">
@@ -337,7 +337,7 @@ function AdminDashboard() {
             className={`nav-item ${activeTab === 'ingredients' ? 'active' : ''}`}
             onClick={() => setActiveTab('ingredients')}
           >
-            <MdKitchen size={20} /> Ingredients
+            <MdKitchen size={20} /> Ingredient Management
           </button>
         </nav>
 

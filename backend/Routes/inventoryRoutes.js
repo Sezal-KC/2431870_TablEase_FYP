@@ -59,15 +59,20 @@ router.delete('/ingredients/:id', authMiddleware, async (req, res) => {
 // PATCH restock ingredient
 router.patch('/ingredients/:id/restock', authMiddleware, async (req, res) => {
   try {
-    const { quantity } = req.body;
+    const { quantity, unit } = req.body;
     if (!quantity || quantity <= 0) {
       return res.status(400).json({ success: false, message: 'Invalid quantity' });
     }
+
     const ingredient = await Ingredient.findByIdAndUpdate(
       req.params.id,
-      { $inc: { currentStock: quantity } },
+      {
+        $inc: { currentStock: quantity },
+        $set: { unit: unit }  // ← update unit too
+      },
       { new: true }
     );
+
     if (!ingredient) return res.status(404).json({ success: false, message: 'Ingredient not found' });
     res.json({ success: true, message: `Restocked ${ingredient.name}`, data: ingredient });
   } catch (err) {
