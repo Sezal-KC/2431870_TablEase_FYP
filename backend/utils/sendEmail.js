@@ -1,28 +1,27 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async ({ to, subject, html }) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,   // 
-        pass: process.env.EMAIL_PASS    // Gmail App Password
-      }
-    });
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // use TLS not SSL
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    },
+    tls: {
+      rejectUnauthorized: false // allows self-signed certificates
+    }
+  });
 
-    const mailOptions = {
-      from: `"TablEase" <${process.env.EMAIL_USER}>`,
-      to,
-      subject,
-      html
-    };
+  const mailOptions = {
+    from: `"TablEase" <${process.env.EMAIL_USER}>`,
+    to,
+    subject,
+    html
+  };
 
-    await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully');
-  } catch (error) {
-    console.error('Email sending failed:', error);
-    throw error;
-  }
+  await transporter.sendMail(mailOptions);
 };
 
 module.exports = sendEmail;
