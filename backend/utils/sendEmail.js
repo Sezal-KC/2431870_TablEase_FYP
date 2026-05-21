@@ -2,20 +2,17 @@ const nodemailer = require('nodemailer');
 
 const sendEmail = async ({ to, subject, html }) => {
   const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // use TLS not SSL
+    host: 'smtp.resend.com',
+    port: 465,
+    secure: true,
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    },
-    tls: {
-      rejectUnauthorized: false // allows self-signed certificates
+      user: 'resend',
+      pass: process.env.EMAIL_PASS 
     }
   });
 
   const mailOptions = {
-    from: `"TablEase" <${process.env.EMAIL_USER}>`,
+    from: 'TablEase <onboarding@resend.dev>',
     to,
     subject,
     html
