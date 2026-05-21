@@ -21,7 +21,14 @@ function RefreshHandler({ setIsAuthenticated }) {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('userRole')?.trim().toLowerCase();
 
-    const publicPaths = ['/login', '/signup', '/verify-otp', '/verify-email', , '/forgot-password'];
+    const publicPaths = [
+      '/login',
+      '/signup',
+      '/verify-otp',
+      '/verify-email',
+      '/forgot-password',
+      '/reset-password'
+    ];
 
     if (token) {
       setIsAuthenticated(true);
@@ -37,7 +44,10 @@ function RefreshHandler({ setIsAuthenticated }) {
         return;
       }
 
-      if (publicPaths.includes(location.pathname)) {
+      if (
+        publicPaths.includes(location.pathname) ||
+        location.pathname.startsWith('/reset-password')
+      ) {
         const dashboardPath = getDashboardPath(role);
         if (location.pathname !== dashboardPath) {
           navigate(dashboardPath, { replace: true });
