@@ -212,8 +212,9 @@ const forgotPassword = async (req, res) => {
     user.passwordResetExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
     await user.save();
 
-    // Reset link points to frontend
-    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+    // Use frontend URL from environment variable, fallback to localhost for development
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     await sendEmail({
       to: email,
