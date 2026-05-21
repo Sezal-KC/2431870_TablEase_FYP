@@ -21,14 +21,12 @@ function RefreshHandler({ setIsAuthenticated }) {
     const token = localStorage.getItem('token');
     const role = localStorage.getItem('userRole')?.trim().toLowerCase();
 
-    const publicPaths = [
-      '/login',
-      '/signup',
-      '/verify-otp',
-      '/verify-email',
-      '/forgot-password',
-      '/reset-password'
-    ];
+    // Check if current path is public
+    // startsWith handles dynamic routes like /reset-password/abc123
+    const isPublicPath =
+      ['/login', '/signup', '/verify-otp', '/verify-email', '/forgot-password', '/'].includes(location.pathname) ||
+      location.pathname.startsWith('/reset-password') ||
+      location.pathname.startsWith('/verify-email');
 
     if (token) {
       setIsAuthenticated(true);
@@ -44,19 +42,27 @@ function RefreshHandler({ setIsAuthenticated }) {
         return;
       }
 
-      if (
-        publicPaths.includes(location.pathname) ||
-        location.pathname.startsWith('/reset-password')
-      ) {
-        const dashboardPath = getDashboardPath(role);
-        if (location.pathname !== dashboardPath) {
-          navigate(dashboardPath, { replace: true });
+      // If logged in user visits a public path like reset-password
+      // let them stay — don't redirect to dashboard
+      if (isPublicPath) {
+        // Only redirect to dashboard if on login/signup pages
+        // NOT on reset-password or verify pages
+        if (
+          location.pathname === '/login' ||
+          location.pathname === '/signup'
+        ) {
+          navigate(getDashboardPath(role), { replace: true });
         }
+        // Otherwise let them stay on the page (reset-password, verify etc)
+        return;
       }
+
     } else {
       setIsAuthenticated(false);
 
-      if (!publicPaths.includes(location.pathname) && location.pathname !== '/') {
+      // If not logged in and trying to access protected route → go to login
+      // But allow public paths including reset-password
+      if (!isPublicPath) {
         navigate('/login', { replace: true });
       }
     }
