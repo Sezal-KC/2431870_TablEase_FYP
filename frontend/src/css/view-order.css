@@ -149,10 +149,27 @@
   padding: 12px 14px;
   background: #fdf6f0;
   border-radius: 8px;
+  gap: 10px;           /* ← consistent gap between elements */
 }
 
-.vo-menu-item-info { display: flex; flex-direction: column; gap: 2px; }
-.vo-menu-item-name { font-size: 0.9rem; font-weight: 600; color: #3a2f25; }
+.vo-menu-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;           /* ← takes remaining space */
+  min-width: 0;      /* ← prevents overflow */
+  padding: 0 8px;    /* ← adds spacing from image */
+}
+
+.vo-menu-item-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #3a2f25;
+  white-space: nowrap;     /* ← no wrapping */
+  overflow: hidden;        /* ← hide overflow */
+  text-overflow: ellipsis; /* ← show ... if too long */
+}
+
 .vo-menu-item-price { font-size: 0.82rem; color: #ff8c42; font-weight: 600; }
 
 /* Reuse from new-order.css */

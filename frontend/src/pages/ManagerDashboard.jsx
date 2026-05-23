@@ -68,6 +68,10 @@ function ManagerDashboard() {
   // Selected period for sales report: today, week, or month
   const [period, setPeriod] = useState('today');
 
+  // Search terms for stock and ingredients tabs
+  const [stockSearch, setStockSearch] = useState('');
+  const [ingredientSearch, setIngredientSearch] = useState('');
+
   // JWT token from localStorage used in all API request headers
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
@@ -83,7 +87,6 @@ function ManagerDashboard() {
   }, [activeTab]);
 
   // Fetches all ingredients from the inventory API
-  // Used by both the Stock tab and the Ingredients tab
   const fetchStock = async () => {
     setLoadingStock(true);
     try {
@@ -109,19 +112,45 @@ function ManagerDashboard() {
     }
   };
 
-  // Sends a PATCH request to add quantity to an ingredient's stock
-  // Also updates the unit in case manager changed it during restock
+  // Handles restock with automatic unit conversion
+  // kg → g : multiply by 1000
+  // liter → ml : multiply by 1000
+  // g → kg : divide by 1000
+  // ml → liter : divide by 1000
   const handleRestock = async () => {
     if (!restockQty || parseFloat(restockQty) <= 0) {
       return handleError('Enter a valid quantity');
     }
+
+    // Convert unit if different from ingredient's stored unit
+    let finalQty = parseFloat(restockQty);
+    let finalUnit = restockUnit;
+
+    if (restockUnit === 'kg' && restockModal.unit === 'g') {
+      finalQty = finalQty * 1000;
+      finalUnit = 'g';
+    } else if (restockUnit === 'g' && restockModal.unit === 'kg') {
+      finalQty = finalQty / 1000;
+      finalUnit = 'kg';
+    } else if (restockUnit === 'liter' && restockModal.unit === 'ml') {
+      finalQty = finalQty * 1000;
+      finalUnit = 'ml';
+    } else if (restockUnit === 'ml' && restockModal.unit === 'liter') {
+      finalQty = finalQty / 1000;
+      finalUnit = 'liter';
+    }
+
     try {
       await axios.patch(
         `${API}/api/inventory/ingredients/${restockModal._id}/restock`,
-        { quantity: parseFloat(restockQty), unit: restockUnit },
+        { quantity: finalQty, unit: finalUnit },
         { headers }
       );
-      handleSuccess(`Restocked ${restockModal.name} — added ${restockQty} ${restockUnit}!`);
+      handleSuccess(
+        `Restocked ${restockModal.name} — added ${restockQty} ${restockUnit}` +
+        (finalUnit !== restockUnit ? ` (converted to ${finalQty} ${finalUnit})` : '') +
+        `!`
+      );
       setRestockModal(null);
       setRestockQty('');
       fetchStock();
@@ -130,15 +159,30 @@ function ManagerDashboard() {
     }
   };
 
+  // Calculates the converted quantity for preview in restock modal
+  const getConvertedQty = () => {
+    if (!restockQty) return null;
+    const qty = parseFloat(restockQty);
+    if (restockUnit === 'kg' && restockModal.unit === 'g') return { qty: qty * 1000, unit: 'g' };
+    if (restockUnit === 'g' && restockModal.unit === 'kg') return { qty: qty / 1000, unit: 'kg' };
+    if (restockUnit === 'liter' && restockModal.unit === 'ml') return { qty: qty * 1000, unit: 'ml' };
+    if (restockUnit === 'ml' && restockModal.unit === 'liter') return { qty: qty / 1000, unit: 'liter' };
+    return null;
+  };
+
+  // Calculates the new total stock after restock for preview
+  const getNewTotal = () => {
+    if (!restockQty) return null;
+    const converted = getConvertedQty();
+    const addQty = converted ? converted.qty : parseFloat(restockQty);
+    return restockModal.currentStock + addQty;
+  };
+
   // Opens the ingredient modal in ADD mode with blank form fields
   const openAddIngredientModal = () => {
     setEditingIngredient(null);
     setIngredientForm({
-      name: '',
-      unit: 'kg',
-      currentStock: '',
-      lowStockThreshold: '',
-      category: 'Other'
+      name: '', unit: 'kg', currentStock: '', lowStockThreshold: '', category: 'Other'
     });
     setShowIngredientModal(true);
   };
@@ -156,14 +200,13 @@ function ManagerDashboard() {
     setShowIngredientModal(true);
   };
 
-  // Saves ingredient — calls POST to create new or PUT to update existing
+  // Saves ingredient — POST to create new or PUT to update existing
   const handleIngredientSave = async () => {
     if (!ingredientForm.name || !ingredientForm.unit) {
       return handleError('Name and unit are required');
     }
     try {
       if (editingIngredient) {
-        // Update existing ingredient
         await axios.put(
           `${API}/api/inventory/ingredients/${editingIngredient._id}`,
           ingredientForm,
@@ -171,12 +214,7 @@ function ManagerDashboard() {
         );
         handleSuccess('Ingredient updated!');
       } else {
-        // Create new ingredient
-        await axios.post(
-          `${API}/api/inventory/ingredients`,
-          ingredientForm,
-          { headers }
-        );
+        await axios.post(`${API}/api/inventory/ingredients`, ingredientForm, { headers });
         handleSuccess('Ingredient added!');
       }
       setShowIngredientModal(false);
@@ -186,7 +224,7 @@ function ManagerDashboard() {
     }
   };
 
-  // Deletes an ingredient after user confirms the action
+  // Deletes an ingredient after user confirms
   const handleIngredientDelete = async (id, name) => {
     if (!window.confirm(`Delete ingredient "${name}"?`)) return;
     try {
@@ -198,24 +236,33 @@ function ManagerDashboard() {
     }
   };
 
-  // Updates the period state and re-fetches sales data for new period
+  // Updates the period state and re-fetches sales data
   const handlePeriodChange = (p) => {
     setPeriod(p);
     fetchSales(p);
   };
 
-  // Clears localStorage and redirects to login page
+  // Clears localStorage and redirects to login
   const handleLogout = () => {
     localStorage.clear();
     navigate('/login', { replace: true });
   };
 
-  // Filter ingredients where currentStock is at or below the alert threshold
-  const lowStockItems = ingredients.filter(
-    i => i.currentStock <= i.lowStockThreshold
+  // Ingredients below or at their alert threshold
+  const lowStockItems = ingredients.filter(i => i.currentStock <= i.lowStockThreshold);
+
+  // Filtered ingredients for stock tab search
+  const filteredStock = ingredients.filter(ing =>
+    ing.name.toLowerCase().includes(stockSearch.toLowerCase())
   );
 
-  // Bar chart configuration for daily revenue
+  // Filtered ingredients for ingredients tab search
+  const filteredIngredients = ingredients.filter(ing =>
+    ing.name.toLowerCase().includes(ingredientSearch.toLowerCase())
+  );
+
+  // ── Chart configurations ─────────────────────────────────────────
+
   const revenueChartData = {
     labels: salesData?.dailyData?.map(d => d.date) || [],
     datasets: [{
@@ -232,28 +279,17 @@ function ManagerDashboard() {
     responsive: true,
     plugins: {
       legend: { display: false },
-      title: {
-        display: true,
-        text: 'Daily Revenue (Rs.)',
-        font: { size: 14 }
-      },
-      tooltip: {
-        callbacks: {
-          label: (ctx) => `Rs. ${ctx.raw.toLocaleString()}`
-        }
-      }
+      title: { display: true, text: 'Daily Revenue (Rs.)', font: { size: 14 } },
+      tooltip: { callbacks: { label: (ctx) => `Rs. ${ctx.raw.toLocaleString()}` } }
     },
     scales: {
       y: {
         beginAtZero: true,
-        ticks: {
-          callback: (value) => `Rs. ${value.toLocaleString()}`
-        }
+        ticks: { callback: (value) => `Rs. ${value.toLocaleString()}` }
       }
     }
   };
 
-  // Doughnut chart configuration for popular items by quantity sold
   const popularChartData = {
     labels: salesData?.popularItems?.map(i => i.name) || [],
     datasets: [{
@@ -267,20 +303,9 @@ function ManagerDashboard() {
   const popularChartOptions = {
     responsive: true,
     plugins: {
-      legend: {
-        position: 'right',
-        labels: { font: { size: 12 } }
-      },
-      title: {
-        display: true,
-        text: 'Popular Items by Quantity Sold',
-        font: { size: 14 }
-      },
-      tooltip: {
-        callbacks: {
-          label: (ctx) => `${ctx.label}: ${ctx.raw} sold`
-        }
-      }
+      legend: { position: 'right', labels: { font: { size: 12 } } },
+      title: { display: true, text: 'Popular Items by Quantity Sold', font: { size: 14 } },
+      tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} sold` } }
     }
   };
 
@@ -290,7 +315,7 @@ function ManagerDashboard() {
       {/* Sidebar with logo, nav tabs and logout */}
       <aside className="manager-sidebar">
 
-        {/* Brand section with logo and welcome message */}
+        {/* Brand section */}
         <div className="manager-brand">
           <img src={logo} alt="TablEase" className="sidebar-logo" />
           <div>
@@ -301,47 +326,38 @@ function ManagerDashboard() {
           </div>
         </div>
 
-        {/* Navigation tabs */}
+        {/* Navigation */}
         <nav className="manager-nav">
-
-          {/* Stock & Inventory — view stock levels and restock */}
           <button
             className={`manager-nav-item ${activeTab === 'stock' ? 'active' : ''}`}
             onClick={() => setActiveTab('stock')}
           >
             <MdInventory size={20} /> Stock & Inventory
           </button>
-
-          {/* Ingredients — full CRUD management */}
           <button
             className={`manager-nav-item ${activeTab === 'ingredients' ? 'active' : ''}`}
             onClick={() => setActiveTab('ingredients')}
           >
             <MdKitchen size={20} /> Ingredients
           </button>
-
-          {/* Sales & Reports — charts and revenue data */}
           <button
             className={`manager-nav-item ${activeTab === 'sales' ? 'active' : ''}`}
             onClick={() => setActiveTab('sales')}
           >
             <MdBarChart size={20} /> Sales & Reports
           </button>
-
         </nav>
 
-        {/* Logout button at bottom of sidebar */}
         <button className="manager-logout-btn" onClick={handleLogout}>
           <MdLogout size={20} /> Logout
         </button>
 
       </aside>
 
-      {/* Main content area — changes based on activeTab */}
+      {/* Main content */}
       <main className="manager-main">
 
-        {/* Stock & Inventory Tab */}
-        {/* Shows all ingredients with current stock levels and restock button */}
+        {/* ── STOCK & INVENTORY TAB ───────────────────────────── */}
         {activeTab === 'stock' && (
           <div className="manager-section">
 
@@ -352,7 +368,21 @@ function ManagerDashboard() {
               </button>
             </div>
 
-            {/* Red banner showing ingredients below threshold */}
+            {/* Search bar for filtering stock table */}
+            <div className="menu-search" style={{ marginBottom: '16px', maxWidth: '400px' }}>
+              <input
+                type="text"
+                value={stockSearch}
+                onChange={e => setStockSearch(e.target.value)}
+                placeholder="🔍 Search ingredients..."
+                className="menu-search-input"
+              />
+              {stockSearch && (
+                <button className="search-clear-btn" onClick={() => setStockSearch('')}>✕</button>
+              )}
+            </div>
+
+            {/* Low stock alert banner */}
             {lowStockItems.length > 0 && (
               <div className="low-stock-banner">
                 <h3>⚠️ Low Stock Alerts ({lowStockItems.length})</h3>
@@ -366,7 +396,7 @@ function ManagerDashboard() {
               </div>
             )}
 
-            {/* Stock table — shows all ingredients with restock button */}
+            {/* Stock table with search filter applied */}
             {loadingStock ? (
               <div className="manager-loading">Loading stock...</div>
             ) : (
@@ -384,29 +414,22 @@ function ManagerDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {ingredients.length === 0 ? (
+                    {filteredStock.length === 0 ? (
                       <tr>
-                        <td
-                          colSpan="7"
-                          style={{ textAlign: 'center', color: '#aaa', padding: '40px' }}
-                        >
-                          No ingredients found
+                        <td colSpan="7" style={{ textAlign: 'center', color: '#aaa', padding: '40px' }}>
+                          {stockSearch ? `No results for "${stockSearch}"` : 'No ingredients found'}
                         </td>
                       </tr>
                     ) : (
-                      ingredients.map(ing => (
+                      filteredStock.map(ing => (
                         <tr
                           key={ing._id}
-                          className={
-                            ing.currentStock <= ing.lowStockThreshold
-                              ? 'low-stock-row'
-                              : ''
-                          }
+                          className={ing.currentStock <= ing.lowStockThreshold ? 'low-stock-row' : ''}
                         >
                           <td><strong>{ing.name}</strong></td>
                           <td>{ing.category}</td>
                           <td>
-                            {/* Stock value turns red when below threshold */}
+                            {/* Turns red when stock is at or below threshold */}
                             <span className={`stock-value ${ing.currentStock <= ing.lowStockThreshold ? 'low' : 'ok'}`}>
                               {ing.currentStock}
                             </span>
@@ -419,7 +442,6 @@ function ManagerDashboard() {
                               : <span className="status-ok">✅ OK</span>}
                           </td>
                           <td>
-                            {/* Opens restock modal for this ingredient */}
                             <button
                               className="restock-btn"
                               onClick={() => {
@@ -441,17 +463,29 @@ function ManagerDashboard() {
           </div>
         )}
 
-        {/* Ingredients Tab */}
-        {/* Full CRUD — manager can add, edit and delete ingredients */}
+        {/* ── INGREDIENTS TAB ─────────────────────────────────── */}
         {activeTab === 'ingredients' && (
           <div className="manager-section">
 
             <div className="manager-section-header">
               <h1>Ingredients</h1>
-              {/* Opens the add ingredient modal */}
               <button className="manager-refresh-btn" onClick={openAddIngredientModal}>
                 <MdAdd size={18} /> Add Ingredient
               </button>
+            </div>
+
+            {/* Search bar for filtering ingredients table */}
+            <div className="menu-search" style={{ marginBottom: '16px', maxWidth: '400px' }}>
+              <input
+                type="text"
+                value={ingredientSearch}
+                onChange={e => setIngredientSearch(e.target.value)}
+                placeholder="🔍 Search ingredients..."
+                className="menu-search-input"
+              />
+              {ingredientSearch && (
+                <button className="search-clear-btn" onClick={() => setIngredientSearch('')}>✕</button>
+              )}
             </div>
 
             {loadingStock ? (
@@ -478,39 +512,46 @@ function ManagerDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {ingredients.map(ingredient => (
-                      <tr key={ingredient._id}>
-                        <td><strong>{ingredient.name}</strong></td>
-                        <td>{ingredient.category}</td>
-                        <td>{ingredient.currentStock}</td>
-                        <td>{ingredient.unit}</td>
-                        <td>{ingredient.lowStockThreshold} {ingredient.unit}</td>
-                        <td>
-                          {ingredient.currentStock <= ingredient.lowStockThreshold
-                            ? <span className="status-low">⚠️ Low Stock</span>
-                            : <span className="status-ok">✅ OK</span>}
-                        </td>
-                        <td>
-                          {/* Edit and Delete action buttons */}
-                          <div style={{ display: 'flex', gap: '6px' }}>
-                            <button
-                              className="restock-btn"
-                              style={{ background: '#2980b9' }}
-                              onClick={() => openEditIngredientModal(ingredient)}
-                            >
-                              <MdEdit size={14} /> Edit
-                            </button>
-                            <button
-                              className="restock-btn"
-                              style={{ background: '#e74c3c' }}
-                              onClick={() => handleIngredientDelete(ingredient._id, ingredient.name)}
-                            >
-                              <MdDelete size={14} /> Delete
-                            </button>
-                          </div>
+                    {filteredIngredients.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" style={{ textAlign: 'center', color: '#aaa', padding: '40px' }}>
+                          {ingredientSearch ? `No results for "${ingredientSearch}"` : 'No ingredients found'}
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredIngredients.map(ingredient => (
+                        <tr key={ingredient._id}>
+                          <td><strong>{ingredient.name}</strong></td>
+                          <td>{ingredient.category}</td>
+                          <td>{ingredient.currentStock}</td>
+                          <td>{ingredient.unit}</td>
+                          <td>{ingredient.lowStockThreshold} {ingredient.unit}</td>
+                          <td>
+                            {ingredient.currentStock <= ingredient.lowStockThreshold
+                              ? <span className="status-low">⚠️ Low Stock</span>
+                              : <span className="status-ok">✅ OK</span>}
+                          </td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button
+                                className="restock-btn"
+                                style={{ background: '#2980b9' }}
+                                onClick={() => openEditIngredientModal(ingredient)}
+                              >
+                                <MdEdit size={14} /> Edit
+                              </button>
+                              <button
+                                className="restock-btn"
+                                style={{ background: '#e74c3c' }}
+                                onClick={() => handleIngredientDelete(ingredient._id, ingredient.name)}
+                              >
+                                <MdDelete size={14} /> Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -518,14 +559,12 @@ function ManagerDashboard() {
           </div>
         )}
 
-        {/* Sales & Reports Tab */}
-        {/* Shows revenue charts and popular items for selected period */}
+        {/* ── SALES & REPORTS TAB ──────────────────────────────── */}
         {activeTab === 'sales' && (
           <div className="manager-section">
 
             <div className="manager-section-header">
               <h1>Sales & Reports</h1>
-              {/* Period filter buttons — today, week, month */}
               <div className="period-buttons">
                 {['today', 'week', 'month'].map(p => (
                   <button
@@ -547,9 +586,7 @@ function ManagerDashboard() {
                 <div className="sales-stats">
                   <div className="sales-stat-card">
                     <h3>Total Revenue</h3>
-                    <p className="sales-stat-value">
-                      Rs. {salesData.totalRevenue.toLocaleString()}
-                    </p>
+                    <p className="sales-stat-value">Rs. {salesData.totalRevenue.toLocaleString()}</p>
                   </div>
                   <div className="sales-stat-card">
                     <h3>Total Orders</h3>
@@ -565,7 +602,7 @@ function ManagerDashboard() {
                   </div>
                 </div>
 
-                {/* Revenue bar chart and popular items doughnut chart */}
+                {/* Revenue bar chart + popular items doughnut */}
                 <div className="charts-grid">
                   <div className="chart-card">
                     {salesData.dailyData.length === 0 ? (
@@ -595,13 +632,11 @@ function ManagerDashboard() {
                           <div className="popular-rank">#{i + 1}</div>
                           <div className="popular-info">
                             <span className="popular-name">{item.name}</span>
-                            {/* Progress bar width = this item's qty as % of top item's qty */}
+                            {/* Bar width = item qty as % of top item qty */}
                             <div className="popular-bar-wrap">
                               <div
                                 className="popular-bar"
-                                style={{
-                                  width: `${(item.qty / salesData.popularItems[0].qty) * 100}%`
-                                }}
+                                style={{ width: `${(item.qty / salesData.popularItems[0].qty) * 100}%` }}
                               />
                             </div>
                           </div>
@@ -621,8 +656,8 @@ function ManagerDashboard() {
 
       </main>
 
-      {/* Restock Modal */}
-      {/* Opens when manager clicks Restock button on a stock row */}
+      {/* ── RESTOCK MODAL ───────────────────────────────────────── */}
+      {/* Shows when manager clicks Restock — handles unit conversion */}
       {restockModal && (
         <div className="modal-overlay" onClick={() => setRestockModal(null)}>
           <div className="restock-modal" onClick={e => e.stopPropagation()}>
@@ -636,7 +671,6 @@ function ManagerDashboard() {
             <div className="restock-input-wrap">
               <label>Add quantity</label>
               <div className="restock-input-row">
-                {/* Quantity input */}
                 <input
                   type="number"
                   value={restockQty}
@@ -645,7 +679,7 @@ function ManagerDashboard() {
                   min="0"
                   autoFocus
                 />
-                {/* Unit selector — manager can change unit during restock */}
+                {/* Unit selector — changing unit triggers auto conversion */}
                 <select
                   value={restockUnit}
                   onChange={e => setRestockUnit(e.target.value)}
@@ -657,12 +691,26 @@ function ManagerDashboard() {
               </div>
             </div>
 
-            {/* Preview of what will be added */}
-            {restockQty && (
-              <p className="restock-preview">
-                Adding: <strong>{restockQty} {restockUnit}</strong> to current stock of{' '}
-                <strong>{restockModal.currentStock} {restockModal.unit}</strong>
-              </p>
+            {/* Preview section — shows conversion and new total */}
+            {restockQty && parseFloat(restockQty) > 0 && (
+              <div style={{ background: '#fdf6f0', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
+
+                {/* Show conversion if units differ */}
+                {getConvertedQty() && (
+                  <p style={{ fontSize: '0.85rem', color: '#f0a500', marginBottom: '6px' }}>
+                    🔄 Converting: <strong>{restockQty} {restockUnit}</strong>{' '}
+                    → <strong>{getConvertedQty().qty} {getConvertedQty().unit}</strong>
+                  </p>
+                )}
+
+                <p className="restock-preview" style={{ margin: 0 }}>
+                  Adding: <strong>{getConvertedQty() ? getConvertedQty().qty : restockQty} {restockModal.unit}</strong>
+                  {' '}to <strong>{restockModal.currentStock} {restockModal.unit}</strong>
+                  {' '}= <strong style={{ color: '#27ae60' }}>
+                    {getNewTotal()} {restockModal.unit}
+                  </strong>
+                </p>
+              </div>
             )}
 
             <div className="restock-modal-footer">
@@ -678,8 +726,7 @@ function ManagerDashboard() {
         </div>
       )}
 
-      {/* Add / Edit Ingredient Modal */}
-      {/* Used by both add new and edit existing ingredient actions */}
+      {/* ── ADD / EDIT INGREDIENT MODAL ─────────────────────────── */}
       {showIngredientModal && (
         <div className="modal-overlay" onClick={() => setShowIngredientModal(false)}>
           <div
@@ -688,7 +735,7 @@ function ManagerDashboard() {
             onClick={e => e.stopPropagation()}
           >
 
-            {/* Modal header with title and close button */}
+            {/* Header with title and close button */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ margin: 0 }}>
                 {editingIngredient ? 'Edit Ingredient' : 'Add Ingredient'}
@@ -701,7 +748,7 @@ function ManagerDashboard() {
               </button>
             </div>
 
-            {/* Name and Category row */}
+            {/* Name and Category */}
             <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
               <div style={{ flex: 1 }}>
                 <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#555', display: 'block', marginBottom: '4px' }}>
@@ -724,14 +771,12 @@ function ManagerDashboard() {
                   onChange={e => setIngredientForm({ ...ingredientForm, category: e.target.value })}
                   style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #ddd', borderRadius: '8px', fontSize: '0.88rem', outline: 'none' }}
                 >
-                  {ingredientCategories.map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
+                  {ingredientCategories.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
             </div>
 
-            {/* Unit and Current Stock row */}
+            {/* Unit and Current Stock */}
             <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
               <div style={{ flex: 1 }}>
                 <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#555', display: 'block', marginBottom: '4px' }}>
@@ -742,9 +787,7 @@ function ManagerDashboard() {
                   onChange={e => setIngredientForm({ ...ingredientForm, unit: e.target.value })}
                   style={{ width: '100%', padding: '9px 12px', border: '1.5px solid #ddd', borderRadius: '8px', fontSize: '0.88rem', outline: 'none' }}
                 >
-                  {units.map(u => (
-                    <option key={u} value={u}>{u}</option>
-                  ))}
+                  {units.map(u => <option key={u} value={u}>{u}</option>)}
                 </select>
               </div>
               <div style={{ flex: 1 }}>
@@ -762,7 +805,7 @@ function ManagerDashboard() {
               </div>
             </div>
 
-            {/* Low stock threshold — alert fires when stock drops to this level */}
+            {/* Low stock threshold */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#555', display: 'block', marginBottom: '4px' }}>
                 Low Stock Alert Threshold *
@@ -777,18 +820,12 @@ function ManagerDashboard() {
               />
             </div>
 
-            {/* Modal action buttons */}
+            {/* Action buttons */}
             <div className="restock-modal-footer">
-              <button
-                className="btn-cancel"
-                onClick={() => setShowIngredientModal(false)}
-              >
+              <button className="btn-cancel" onClick={() => setShowIngredientModal(false)}>
                 Cancel
               </button>
-              <button
-                className="btn-confirm-restock"
-                onClick={handleIngredientSave}
-              >
+              <button className="btn-confirm-restock" onClick={handleIngredientSave}>
                 {editingIngredient ? 'Save Changes' : 'Add Ingredient'}
               </button>
             </div>

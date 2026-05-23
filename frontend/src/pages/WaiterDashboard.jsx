@@ -203,10 +203,7 @@ function WaiterDashboard() {
             </header>
 
             <div className="stats-grid">
-              <div className="stat-card revenue">
-                <h3>Today's Revenue</h3>
-                <p className="value">Rs. {stats.todaysRevenue.toLocaleString()}</p>
-              </div>
+             
               <div className="stat-card orders">
                 <h3>Orders Today</h3>
                 <p className="value">{stats.ordersToday.toLocaleString()}</p>

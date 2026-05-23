@@ -156,6 +156,14 @@ const login = async (req, res) => {
       });
     }
 
+    if (role && user.role !== role) {
+      return res.status(403).json({
+        success: false,
+        message: `Incorrect role selected. You are registered as ${user.role}.`
+      });
+    }
+
+
     const jwtToken = jwt.sign(
       {
         _id: user._id,
