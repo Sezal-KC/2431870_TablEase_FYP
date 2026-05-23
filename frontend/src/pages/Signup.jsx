@@ -37,6 +37,7 @@ function Signup() {
     }
 
    
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!passwordRegex.test(password)) {
       return handleError('Password must be at least 8 characters with uppercase, lowercase, number and special character (@$!%*?&)');
     }
@@ -135,7 +136,7 @@ function Signup() {
               <option value="waiter">Waiter</option>
               <option value="cashier">Cashier</option>
               <option value="manager">Manager</option>
-              <option value="admin">Admin</option>
+             
               <option value="kitchen_staff">Kitchen Staff</option>
             </select>
           </div>
