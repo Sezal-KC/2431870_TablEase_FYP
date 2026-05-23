@@ -4,6 +4,7 @@ import { handleSuccess, handleError } from '../utils';
 import { MdLogout, MdRefresh, MdAdd, MdDelete, MdBook, MdTableRestaurant } from 'react-icons/md';
 import '../css/kitchen-dashboard.css';
 import logo from '../assets/logo.jpg';
+import { useNavigate } from 'react-router-dom';
 
 //const API = 'http://localhost:8080';
 
@@ -15,6 +16,7 @@ const STATUS_CONFIG = {
 };
 
 function KitchenDashboard() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('orders');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -203,7 +205,7 @@ function KitchenDashboard() {
 
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = '/login';
+    navigate('/login', { replace: true });
   };
 
   const getElapsedTime = (createdAt) => {

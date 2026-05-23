@@ -15,6 +15,7 @@ import { Bar, Doughnut } from 'react-chartjs-2';
 import '../css/manager-dashboard.css';
 import logo from '../assets/logo.jpg';
 import API from '../config';
+import { useNavigate } from 'react-router-dom';
 
 // Register all Chart.js components needed for Bar and Doughnut charts
 ChartJS.register(
@@ -24,6 +25,8 @@ ChartJS.register(
 );
 
 function ManagerDashboard() {
+
+  const navigate = useNavigate();
 
   // Which sidebar tab is currently active
   const [activeTab, setActiveTab] = useState('stock');
@@ -204,7 +207,7 @@ function ManagerDashboard() {
   // Clears localStorage and redirects to login page
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = '/login';
+    navigate('/login', { replace: true });
   };
 
   // Filter ingredients where currentStock is at or below the alert threshold

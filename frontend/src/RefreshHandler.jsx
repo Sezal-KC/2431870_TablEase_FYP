@@ -42,6 +42,25 @@ function RefreshHandler({ setIsAuthenticated }) {
         return;
       }
 
+      // Prevent users from accessing other role's pages via back button
+      const roleDashboards = {
+        waiter: ['/waiter-dashboard', '/new-order', '/view-order'],
+        cashier: ['/cashier-dashboard'],
+        manager: ['/manager-dashboard'],
+        admin: ['/admin-dashboard'],
+        kitchen_staff: ['/kitchen-dashboard']
+      };
+
+      const allowedPaths = roleDashboards[role] || [];
+      const isAllowed = allowedPaths.some(path => location.pathname.startsWith(path));
+      const isPublic = isPublicPath;
+
+      if (!isPublic && !isAllowed) {
+        // User is trying to access another role's page — redirect to their dashboard
+        navigate(getDashboardPath(role), { replace: true });
+        return;
+      }
+
       // If logged in user visits a public path like reset-password
       // let them stay — don't redirect to dashboard
       if (isPublicPath) {

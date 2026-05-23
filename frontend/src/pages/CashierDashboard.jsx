@@ -5,13 +5,14 @@ import { MdLogout, MdRefresh, MdClose, MdCheck, MdReceipt, MdPrint, MdPointOfSal
 import '../css/cashier-dashboard.css';
 import CryptoJS from 'crypto-js';
 import logo from '../assets/logo.jpg';
-
+import { useNavigate } from 'react-router-dom';
 import API from '../config';
 const ESEWA_SECRET = '8gBm/:&EnhH.1/q';
 const ESEWA_PRODUCT_CODE = 'EPAYTEST';
 const ESEWA_URL = 'https://rc-epay.esewa.com.np/api/epay/main/v2/form';
 
 function CashierDashboard() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('billing');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,7 +91,7 @@ function CashierDashboard() {
 
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = '/login';
+    navigate('/login', { replace: true });
   };
 
   // VAT inclusive calculations

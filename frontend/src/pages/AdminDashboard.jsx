@@ -7,12 +7,15 @@ import {
 } from 'react-icons/md';
 import '../css/admin-dashboard.css';
 import logo from '../assets/logo.jpg';
+import { useNavigate } from 'react-router-dom';
 
 import API from '../config';
 
 //const API = 'http://localhost:8080';
 
 function AdminDashboard() {
+
+  const navigate = useNavigate();
 
   // ── Active tab state ─────────────────────────────────────────────
   const [activeTab, setActiveTab] = useState('menu');
@@ -293,17 +296,17 @@ function AdminDashboard() {
     }
   };
 
-  // ── Logout ───────────────────────────────────────────────────────
+  //Logout
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = '/login';
+    navigate('/login', { replace: true });
   };
 
-  // ── Render ───────────────────────────────────────────────────────
+  // ── Render 
   return (
     <div className="admin-layout">
 
-      {/* ── Sidebar ─────────────────────────────────────────────── */}
+      {/* ── Sidebar */}
       <aside className="admin-sidebar">
 
         {/* Brand / Logo */}
@@ -348,10 +351,10 @@ function AdminDashboard() {
 
       </aside>
 
-      {/* ── Main Content ─────────────────────────────────────────── */}
+      {/* ── Main Content */}
       <main className="admin-main">
 
-        {/* ── MENU TAB ──────────────────────────────────────────── */}
+        {/* ── MENU TAB  */}
         {activeTab === 'menu' && (
           <div className="admin-section">
 
