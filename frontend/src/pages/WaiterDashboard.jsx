@@ -69,7 +69,7 @@ function WaiterDashboard() {
 
     socket.on('orderPaid', (data) => {
       handleSuccess(`✅ ${data.message}`);
-      setAlerts(prev => [`✅ ${data.message}`, ...prev]);
+      setAlerts(prev => [` ${data.message}`, ...prev]);
       fetchTables();
     });
 
