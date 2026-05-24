@@ -131,7 +131,7 @@ const verifyEmail = async (req, res) => {
 ========================= */
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
     const user = await UserModel.findOne({ email: email.toLowerCase() });
     if (!user) {
