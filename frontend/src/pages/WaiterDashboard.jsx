@@ -33,12 +33,27 @@ function WaiterDashboard() {
   });
   const [recentOrders, setRecentOrders] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
-  const [alerts, setAlerts] = useState([]);
+  
+  // Load alerts from localStorage on first render
+  const [alerts, setAlerts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('waiterAlerts');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Save alerts to localStorage whenever alerts array changes
+  useEffect(() => {
+    localStorage.setItem('waiterAlerts', JSON.stringify(alerts));
+  }, [alerts]);
+
 
   const handleLogout = () => {
     localStorage.clear();
     navigate('/login', { replace: true });
-    handleSuccess('Logged out successfully');
+    
   };
 
   const fetchTables = async () => {
@@ -68,8 +83,8 @@ function WaiterDashboard() {
     });
 
     socket.on('orderPaid', (data) => {
-      handleSuccess(`✅ ${data.message}`);
-      setAlerts(prev => [` ${data.message}`, ...prev]);
+      handleSuccess(data.message); // ← 
+      setAlerts(prev => [data.message, ...prev]);
       fetchTables();
     });
 
@@ -358,7 +373,10 @@ function WaiterDashboard() {
                     </span>
                     <button
                       className="clear-alerts-btn"
-                      onClick={() => setAlerts([])}
+                      onClick={() => {
+                        setAlerts([]);
+                        localStorage.removeItem('waiterAlerts');
+                      }}
                     >
                       Clear All
                     </button>
@@ -375,7 +393,11 @@ function WaiterDashboard() {
                         </div>
                         <button
                           className="alert-dismiss-btn"
-                          onClick={() => setAlerts(prev => prev.filter((_, idx) => idx !== i))}
+                          onClick={() => {
+                            const updated = alerts.filter((_, idx) => idx !== i);
+                            setAlerts(updated);
+                            localStorage.setItem('waiterAlerts', JSON.stringify(updated));
+                          }}
                         >
                           ✕
                         </button>
