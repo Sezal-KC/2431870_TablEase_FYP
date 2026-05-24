@@ -194,12 +194,12 @@ function KitchenDashboard() {
   const handleItemReadyAll = async (itemName) => {
     try {
       const res = await axios.patch(`${API}/api/orders/item-ready-all`, { itemName }, { headers });
-      handleSuccess(res.data.message); // ← shows partial success message with skipped tables
+      handleSuccess(res.data.message);
       fetchOrders();
       fetchConsolidated();
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to mark all ready';
-      handleError(msg); // ← shows "Please click Start Preparing first for: T1, T2"
+      handleError(msg);
     }
   };
 

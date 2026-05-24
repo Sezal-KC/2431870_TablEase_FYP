@@ -1,6 +1,4 @@
 
-
-
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../Middlewares/auth');
@@ -355,41 +353,42 @@ router.patch('/item-ready-all', authMiddleware, async (req, res) => {
       status: { $in: ['pending', 'preparing'] }
     }).populate('table', 'tableNumber');
 
-    // Find orders that have this item
+    const io = req.app.get('io');
+
+    // Find all orders that have this item and it's not ready yet
     const ordersWithItem = orders.filter(o =>
       o.items.some(i => i.name === itemName && !i.isReady)
     );
 
-    // Check if any are still pending
-    const pendingOrders = ordersWithItem.filter(o => o.status === 'pending');
-    const preparingOrders = ordersWithItem.filter(o => o.status === 'preparing');
-
-    if (pendingOrders.length > 0 && preparingOrders.length === 0) {
-      // ALL orders are still pending — block completely
-      const tableNums = pendingOrders.map(o => o.table?.tableNumber).join(', ');
+    if (ordersWithItem.length === 0) {
       return res.status(400).json({
         success: false,
-        message: `Please click "Start Preparing" first for: ${tableNums}`
+        message: `No active orders found with ${itemName}`
       });
     }
 
-    const io = req.app.get('io');
     let markedCount = 0;
-    const skippedTables = [];
+    let autoPreparedTables = [];
 
     for (const order of ordersWithItem) {
-      // Skip pending orders
+
+      // If order is still pending, automatically move it to preparing
+      // This handles bulk preparation where chef forgot to click Start Preparing
       if (order.status === 'pending') {
-        skippedTables.push(order.table?.tableNumber);
-        continue;
+        order.status = 'preparing';
+        // Mark all existing items as not new since we are now preparing
+        order.items = order.items.map(i => ({ ...i.toObject(), isNew: false }));
+        autoPreparedTables.push(order.table?.tableNumber);
       }
 
+      // Mark this specific item as ready
       const item = order.items.find(i => i.name === itemName && !i.isReady);
       if (!item) continue;
 
       item.isReady = true;
       markedCount++;
 
+      // Check if ALL items in this order are now ready
       const allReady = order.items.every(i => i.isReady === true);
       if (allReady) {
         order.status = 'ready';
@@ -406,12 +405,14 @@ router.patch('/item-ready-all', authMiddleware, async (req, res) => {
           message: `${itemName} for ${order.table?.tableNumber} is ready! 🍽️`
         });
       }
+
       await order.save();
     }
 
+    // Build response message
     let message = `${itemName} marked ready for ${markedCount} table(s)`;
-    if (skippedTables.length > 0) {
-      message += `. Skipped (not preparing yet): ${skippedTables.join(', ')}`;
+    if (autoPreparedTables.length > 0) {
+      message += `. Auto-started preparing for: Table ${autoPreparedTables.join(', Table ')}`;
     }
 
     res.json({ success: true, message });
