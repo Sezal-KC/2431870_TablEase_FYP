@@ -264,10 +264,11 @@ function CashierDashboard() {
     });
 
     document.body.appendChild(form);
-    form.submit();
-
     console.log('success_url:', fields.success_url);
     console.log('failure_url:', fields.failure_url);
+    form.submit();
+
+    
   };
 
   // Opens a print window with formatted receipt
