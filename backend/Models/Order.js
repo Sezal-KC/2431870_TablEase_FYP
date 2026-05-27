@@ -28,6 +28,11 @@ const OrderSchema = new mongoose.Schema({
     enum: ['pending', 'preparing', 'ready', 'served', 'billed', 'paid'],
     default: 'pending'
   },
+
+  paymentMethod: {
+  type: String,
+  default: 'cash'
+},
   totalAmount: Number
 }, { timestamps: true });
 

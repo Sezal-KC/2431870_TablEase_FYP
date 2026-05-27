@@ -81,7 +81,10 @@ router.post('/esewa/verify', authMiddleware, async (req, res) => {
 
     const order = await Order.findByIdAndUpdate(
       orderId,
-      { status: 'paid' },
+      { 
+        status: 'paid',
+        paymentMethod: 'esewa'  // ← add this
+      },
       { new: true }
     ).populate('table');
 

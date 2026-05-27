@@ -12,6 +12,7 @@ function EsewaSuccess() {
 
   useEffect(() => {
     const verifyPayment = async () => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
       try {
         // eSewa sends response as base64 encoded data param
         const data = searchParams.get('data');
