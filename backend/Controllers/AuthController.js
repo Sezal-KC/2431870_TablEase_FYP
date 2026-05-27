@@ -26,12 +26,37 @@ const signup = async (req, res) => {
     }
 
     const existingUser = await UserModel.findOne({ email: email.toLowerCase() });
-    if (existingUser) {
-      return res.status(409).json({
-        success: false,
-        message: 'Email already registered'
-      });
-    }
+      if (existingUser) {
+        // If account exists but email not verified, resend OTP
+        if (!existingUser.isEmailVerified) {
+          const otp = generateOTP();
+          existingUser.emailVerificationToken = otp;
+          existingUser.emailVerificationExpires = Date.now() + 10 * 60 * 1000;
+          await existingUser.save();
+
+          await sendEmail({
+            to: email,
+            subject: 'Your TablEase OTP Verification Code',
+            html: `
+              <h2>Welcome to TablEase</h2>
+              <p>Your OTP to verify your email is:</p>
+              <h1>${otp}</h1>
+              <p>This OTP is valid for 10 minutes.</p>
+            `
+          });
+
+          return res.status(200).json({
+            success: true,
+            message: 'Account exists but not verified. A new OTP has been sent to your email.'
+          });
+        }
+
+        // Account exists and is verified
+        return res.status(409).json({
+          success: false,
+          message: 'Email already registered'
+        });
+      }
 
     const validRoles = ['waiter', 'cashier', 'manager', 'admin', 'kitchen_staff'];
     if (!validRoles.includes(role)) {

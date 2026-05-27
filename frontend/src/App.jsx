@@ -39,7 +39,7 @@ function App() {
 
       <Routes>
         {/* Public routes */}
-        <Route path="/" element={<Landing />} />               {/* Landing page is now the home */}
+        <Route path="/" element={<Landing />} />              
         <Route path="/login" element={<Login setAuth={setIsAuthenticated} />} />
         <Route path="/signup" element={<Signup />} />
 
@@ -47,10 +47,20 @@ function App() {
 
         <Route path="/verify-otp" element={<VerifyOTP />} />
 
-         <Route path="/admin-dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+        
 
 
         {/* Role-specific protected routes */}
+
+        <Route 
+          path="/admin-dashboard" 
+          element={
+            <PrivateRoute>
+              <AdminDashboard />
+            </PrivateRoute>
+          } 
+        />
+        
         <Route
           path="/waiter-dashboard"
           element={
