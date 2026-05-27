@@ -641,7 +641,7 @@ function ManagerDashboard() {
                 {/* Export button — only shows when data is loaded */}
                 {salesData && (
                   <button className="export-csv-btn" onClick={handleExportReport}>
-                    ⬇️ Export CSV
+                    ⬇ Export CSV
                   </button>
                 )}
               </div>
