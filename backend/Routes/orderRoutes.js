@@ -71,6 +71,11 @@ router.post('/', authMiddleware, async (req, res) => {
       }
     }
 
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('orderPlaced', order);
+    }
+
     res.status(201).json({ success: true, message: 'Order placed successfully', data: order });
   } catch (err) {
     console.error('Order error:', err);
@@ -309,6 +314,11 @@ router.patch('/:orderId/add-items', authMiddleware, async (req, res) => {
     order.status = 'pending';
     await order.save();
 
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('orderUpdated', order);
+    }
+
     res.json({ success: true, message: 'Items added to order', data: order });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to update order' });
@@ -335,13 +345,19 @@ router.patch('/:orderId/status', authMiddleware, async (req, res) => {
     await order.save();
     await order.populate('table', 'tableNumber');
 
+    const io = req.app.get('io');
     if (status === 'ready') {
-      const io = req.app.get('io');
-      io.emit('orderReady', {
-        orderId: order._id,
-        tableNumber: order.table?.tableNumber,
-        message: `Order for ${order.table?.tableNumber} is ready to serve! 🍽️`
-      });
+      if (io) {
+        io.emit('orderReady', {
+          orderId: order._id,
+          tableNumber: order.table?.tableNumber,
+          message: `Order for ${order.table?.tableNumber} is ready to serve! 🍽️`
+        });
+      }
+    }
+
+    if (io) {
+      io.emit('orderStatusChanged', order);
     }
 
     res.json({ success: true, message: `Order marked as ${status}`, data: order });

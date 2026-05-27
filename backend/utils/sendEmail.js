@@ -1,5 +1,4 @@
 const nodemailer = require('nodemailer');
-const { Resend } = require('resend');
 
 const sendEmail = async ({ to, subject, html }) => {
   // 1. Check for Brevo SMTP first
@@ -52,6 +51,7 @@ const sendEmail = async ({ to, subject, html }) => {
   const resendApiKey = process.env.RESEND_API_KEY || (emailPass.startsWith('re_') ? emailPass : null);
   if (resendApiKey) {
     console.log('Sending email via Resend to:', to);
+    const { Resend } = require('resend');
     const resend = new Resend(resendApiKey);
     return await resend.emails.send({
       from: 'TablEase <onboarding@resend.dev>',

@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+// cashierdashboard.jsx ma yo :import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { handleSuccess, handleError } from '../utils';
 import {
   MdLogout, MdRefresh, MdClose, MdCheck,
   MdReceipt, MdPrint, MdPointOfSale
 } from 'react-icons/md';
+import { io } from 'socket.io-client';
 import '../css/cashier-dashboard.css';
 import CryptoJS from 'crypto-js';
 import logo from '../assets/logo.jpg';
@@ -109,6 +110,23 @@ function CashierDashboard() {
       console.error('Failed to fetch restaurant info');
     }
   };
+
+  // Socket.io for real-time billing updates
+  useEffect(() => {
+    const socket = io(API);
+
+    const handleBillingUpdate = () => {
+      fetchOrders();
+    };
+
+    socket.on('orderStatusChanged', handleBillingUpdate);
+    socket.on('orderReady', handleBillingUpdate);
+    socket.on('orderPaid', handleBillingUpdate);
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   // On mount: load ready orders, restaurant info, set auto-refresh every 30s
   useEffect(() => {

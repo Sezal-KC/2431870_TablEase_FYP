@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { handleSuccess, handleError } from '../utils';
 import { MdLogout, MdRefresh, MdAdd, MdDelete, MdBook, MdTableRestaurant } from 'react-icons/md';
+import { io } from 'socket.io-client';
 import '../css/kitchen-dashboard.css';
 import logo from '../assets/logo.jpg';
 import { useNavigate } from 'react-router-dom';
@@ -62,6 +63,24 @@ function KitchenDashboard() {
       setLoadingConsolidated(false);
     }
   };
+
+  // Socket.io for real-time order updates
+  useEffect(() => {
+    const socket = io(API);
+
+    const handleOrderChange = () => {
+      fetchOrders();
+    };
+
+    socket.on('orderPlaced', handleOrderChange);
+    socket.on('orderUpdated', handleOrderChange);
+    socket.on('orderStatusChanged', handleOrderChange);
+    socket.on('orderPaid', handleOrderChange);
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [fetchOrders]);
 
   useEffect(() => {
     fetchOrders();
