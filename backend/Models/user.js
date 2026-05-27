@@ -53,6 +53,8 @@ const UserSchema = new Schema({
     type: Date
   },
 
+  
+
   passwordResetToken: {
   type: String
   },

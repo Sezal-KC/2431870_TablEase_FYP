@@ -114,6 +114,7 @@ const signup = async (req, res) => {
 ========================= */
 const verifyEmail = async (req, res) => {
   try {
+    console.log("verify email function called by frontend")
     const { email, otp } = req.body; // OTP verification now via POST body
 
     const user = await UserModel.findOne({
