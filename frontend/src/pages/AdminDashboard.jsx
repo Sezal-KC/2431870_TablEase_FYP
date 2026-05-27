@@ -500,7 +500,7 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* ── INGREDIENTS TAB ───────────────────────────────────── */}
+        {/* ── INGREDIENTS TAB  */}
         {activeTab === 'ingredients' && (
           <div className="admin-section">
 
@@ -575,7 +575,7 @@ function AdminDashboard() {
 
       </main>
 
-      {/* ── MENU MODAL ──────────────────────────────────────────── */}
+      {/* ── MENU MODAL  */}
       {showMenuModal && (
         <div className="modal-overlay" onClick={() => setShowMenuModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -708,7 +708,7 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* ── INGREDIENT MODAL ────────────────────────────────────── */}
+      {/* ── INGREDIENT MODAL  */}
       {showIngredientModal && (
         <div className="modal-overlay" onClick={() => setShowIngredientModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -792,7 +792,7 @@ function AdminDashboard() {
         </div>
       )}
 
-      {/* ── USER EDIT MODAL ──────────────────────────────────────── */}
+      {/* ── USER EDIT MODAL */}
       {showUserModal && (
         <div className="modal-overlay" onClick={() => setShowUserModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>

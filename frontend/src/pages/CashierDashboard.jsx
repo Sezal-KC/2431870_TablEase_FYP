@@ -249,8 +249,8 @@ function CashierDashboard() {
       product_code: ESEWA_PRODUCT_CODE,
       product_service_charge: '0',
       product_delivery_charge: '0',
-      success_url: `${import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/esewa/success`,
-      failure_url: `${import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/esewa/failure`,
+      success_url: 'https://tablease-frontend.onrender.com/esewa/success',
+      failure_url: 'https://tablease-frontend.onrender.com/esewa/failure',
       signed_field_names: 'total_amount,transaction_uuid,product_code',
       signature
     };

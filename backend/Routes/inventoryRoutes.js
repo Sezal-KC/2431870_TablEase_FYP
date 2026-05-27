@@ -5,7 +5,7 @@ const Ingredient = require('../Models/Ingredient');
 const Recipe = require('../Models/Recipe');
 const MenuItem = require('../Models/MenuItem');
 
-// ── INGREDIENT ROUTES ──────────────────────────────────────────────
+// ── INGREDIENT ROUTES 
 
 // GET all ingredients
 router.get('/ingredients', authMiddleware, async (req, res) => {
@@ -92,7 +92,7 @@ router.get('/ingredients/low-stock', authMiddleware, async (req, res) => {
   }
 });
 
-// ── RECIPE ROUTES ──────────────────────────────────────────────────
+// ── RECIPE ROUTES 
 
 // GET all recipes
 router.get('/recipes', authMiddleware, async (req, res) => {
