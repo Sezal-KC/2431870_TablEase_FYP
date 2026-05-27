@@ -9,6 +9,7 @@ import '../css/admin-dashboard.css';
 import logo from '../assets/logo.jpg';
 import { useNavigate } from 'react-router-dom';
 
+import { io } from 'socket.io-client';
 import API from '../config';
 
 //const API = 'http://localhost:8080';
@@ -84,6 +85,29 @@ function AdminDashboard() {
   const units = ['kg', 'g', 'liter', 'ml', 'pcs'];
 
   // ── Fetch data when tab changes ──────────────────────────────────
+  // Socket.io for real-time stock updates
+  useEffect(() => {
+    const socket = io(API);
+
+    socket.on('stockUpdate', (updatedIngredient) => {
+      setIngredients(prev => {
+        const exists = prev.some(item => item._id === updatedIngredient._id);
+        if (exists) {
+          return prev.map(item => item._id === updatedIngredient._id ? updatedIngredient : item);
+        }
+        return [...prev, updatedIngredient].sort((a, b) => a.name.localeCompare(b.name));
+      });
+    });
+
+    socket.on('ingredientDeleted', (id) => {
+      setIngredients(prev => prev.filter(item => item._id !== id));
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     if (activeTab === 'menu') fetchMenu();
     if (activeTab === 'users') fetchUsers();

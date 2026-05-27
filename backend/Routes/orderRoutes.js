@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../Middlewares/auth');
@@ -52,14 +51,22 @@ router.post('/', authMiddleware, async (req, res) => {
         );
 
         const updated = await Ingredient.findById(recipeIngredient.ingredient._id);
+
+        // Emit socket event for real-time stock updates
+        const io = req.app.get('io');
+        if (io) {
+          io.emit('stockUpdate', updated);
+        }
+
         if (updated.currentStock <= updated.lowStockThreshold) {
-          const io = req.app.get('io');
-          io.emit('lowStock', {
-            ingredient: updated.name,
-            currentStock: updated.currentStock,
-            unit: updated.unit,
-            message: `⚠️ Low stock: ${updated.name} (${updated.currentStock}${updated.unit} remaining)`
-          });
+          if (io) {
+            io.emit('lowStock', {
+              ingredient: updated.name,
+              currentStock: updated.currentStock,
+              unit: updated.unit,
+              message: `⚠️ Low stock: ${updated.name} (${updated.currentStock}${updated.unit} remaining)`
+            });
+          }
         }
       }
     }

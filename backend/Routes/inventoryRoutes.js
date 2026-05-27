@@ -25,6 +25,12 @@ router.post('/ingredients', authMiddleware, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Name and unit are required' });
     }
     const ingredient = await Ingredient.create({ name, unit, currentStock, lowStockThreshold, category });
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('stockUpdate', ingredient);
+    }
+
     res.status(201).json({ success: true, message: 'Ingredient added', data: ingredient });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to add ingredient' });
@@ -40,6 +46,12 @@ router.put('/ingredients/:id', authMiddleware, async (req, res) => {
       { new: true, runValidators: true }
     );
     if (!ingredient) return res.status(404).json({ success: false, message: 'Ingredient not found' });
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('stockUpdate', ingredient);
+    }
+
     res.json({ success: true, message: 'Ingredient updated', data: ingredient });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to update ingredient' });
@@ -50,6 +62,12 @@ router.put('/ingredients/:id', authMiddleware, async (req, res) => {
 router.delete('/ingredients/:id', authMiddleware, async (req, res) => {
   try {
     await Ingredient.findByIdAndDelete(req.params.id);
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('ingredientDeleted', req.params.id);
+    }
+
     res.json({ success: true, message: 'Ingredient deleted' });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to delete ingredient' });
@@ -74,6 +92,12 @@ router.patch('/ingredients/:id/restock', authMiddleware, async (req, res) => {
     );
 
     if (!ingredient) return res.status(404).json({ success: false, message: 'Ingredient not found' });
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('stockUpdate', ingredient);
+    }
+
     res.json({ success: true, message: `Restocked ${ingredient.name}`, data: ingredient });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to restock' });
