@@ -248,6 +248,66 @@ function ManagerDashboard() {
     navigate('/login', { replace: true });
   };
 
+  // Exports current sales report as a CSV file
+  const handleExportReport = () => {
+    if (!salesData) return handleError('No data to export. Load a report first.');
+
+    const periodLabel = period.charAt(0).toUpperCase() + period.slice(1);
+    const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+
+    // Section 1: Summary
+    const summaryRows = [
+      ['TablEase POS - Sales Report'],
+      [`Period: ${periodLabel}`],
+      [`Generated: ${new Date().toLocaleString()}`],
+      [],
+      ['SUMMARY'],
+      ['Metric', 'Value'],
+      ['Total Revenue', `Rs. ${salesData.totalRevenue.toLocaleString()}`],
+      ['Total Orders', salesData.totalOrders],
+      ['Average Order Value', `Rs. ${salesData.totalOrders > 0 ? (salesData.totalRevenue / salesData.totalOrders).toFixed(0) : 0}`],
+      [],
+    ];
+
+    // Section 2: Daily Revenue
+    const dailyRows = [
+      ['DAILY REVENUE'],
+      ['Date', 'Revenue (Rs.)', 'Orders'],
+      ...salesData.dailyData.map(d => [d.date, d.revenue.toFixed(0), d.orders]),
+      [],
+    ];
+
+    // Section 3: Popular Items
+    const popularRows = [
+      ['TOP 5 POPULAR ITEMS'],
+      ['Rank', 'Item Name', 'Qty Sold', 'Revenue (Rs.)'],
+      ...salesData.popularItems.map((item, i) => [
+        `#${i + 1}`,
+        item.name,
+        item.qty,
+        item.revenue.toFixed(0)
+      ]),
+    ];
+
+    // Combine all sections and convert to CSV string
+    const csvContent = [...summaryRows, ...dailyRows, ...popularRows]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n');
+
+    // Trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `TablEase_Report_${periodLabel}_${today}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    handleSuccess(`${periodLabel} report downloaded!`);
+  };
+
   // Ingredients below or at their alert threshold
   const lowStockItems = ingredients.filter(i => i.currentStock <= i.lowStockThreshold);
 
@@ -261,7 +321,7 @@ function ManagerDashboard() {
     ing.name.toLowerCase().includes(ingredientSearch.toLowerCase())
   );
 
-  // ── Chart configurations ─────────────────────────────────────────
+  // Chart configurations
 
   const revenueChartData = {
     labels: salesData?.dailyData?.map(d => d.date) || [],
@@ -357,7 +417,7 @@ function ManagerDashboard() {
       {/* Main content */}
       <main className="manager-main">
 
-        {/* ── STOCK & INVENTORY TAB ───────────────────────────── */}
+        {/* STOCK & INVENTORY TAB */}
         {activeTab === 'stock' && (
           <div className="manager-section">
 
@@ -463,7 +523,7 @@ function ManagerDashboard() {
           </div>
         )}
 
-        {/* ── INGREDIENTS TAB ─────────────────────────────────── */}
+        {/* INGREDIENTS TAB */}
         {activeTab === 'ingredients' && (
           <div className="manager-section">
 
@@ -559,22 +619,31 @@ function ManagerDashboard() {
           </div>
         )}
 
-        {/* ── SALES & REPORTS TAB ──────────────────────────────── */}
+        {/* SALES & REPORTS TAB */}
         {activeTab === 'sales' && (
           <div className="manager-section">
 
             <div className="manager-section-header">
               <h1>Sales & Reports</h1>
-              <div className="period-buttons">
-                {['today', 'week', 'month'].map(p => (
-                  <button
-                    key={p}
-                    className={`period-btn ${period === p ? 'active' : ''}`}
-                    onClick={() => handlePeriodChange(p)}
-                  >
-                    {p.charAt(0).toUpperCase() + p.slice(1)}
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                {/* Period filter buttons */}
+                <div className="period-buttons">
+                  {['today', 'week', 'month'].map(p => (
+                    <button
+                      key={p}
+                      className={`period-btn ${period === p ? 'active' : ''}`}
+                      onClick={() => handlePeriodChange(p)}
+                    >
+                      {p.charAt(0).toUpperCase() + p.slice(1)}
+                    </button>
+                  ))}
+                </div>
+                {/* Export button — only shows when data is loaded */}
+                {salesData && (
+                  <button className="export-csv-btn" onClick={handleExportReport}>
+                    ⬇️ Export CSV
                   </button>
-                ))}
+                )}
               </div>
             </div>
 
@@ -656,7 +725,7 @@ function ManagerDashboard() {
 
       </main>
 
-      {/* ── RESTOCK MODAL ───────────────────────────────────────── */}
+      {/* RESTOCK MODAL */}
       {/* Shows when manager clicks Restock — handles unit conversion */}
       {restockModal && (
         <div className="modal-overlay" onClick={() => setRestockModal(null)}>
@@ -726,7 +795,7 @@ function ManagerDashboard() {
         </div>
       )}
 
-      {/* ── ADD / EDIT INGREDIENT MODAL ─────────────────────────── */}
+      {/* ADD / EDIT INGREDIENT MODAL */}
       {showIngredientModal && (
         <div className="modal-overlay" onClick={() => setShowIngredientModal(false)}>
           <div

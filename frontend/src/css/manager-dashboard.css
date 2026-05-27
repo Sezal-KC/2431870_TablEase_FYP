@@ -458,6 +458,25 @@
   .period-buttons { flex-wrap: wrap; }
 }
 
+.export-csv-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.export-csv-btn:hover {
+  background: #219a52;
+}
+
 @media (max-width: 480px) {
   .sales-stats { grid-template-columns: 1fr; }
   .popular-item { flex-wrap: wrap; }

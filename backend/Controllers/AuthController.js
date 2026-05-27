@@ -4,16 +4,16 @@ const crypto = require('crypto');
 const UserModel = require("../Models/user");
 const sendEmail = require('../utils/sendEmail');
 
-/* =========================
+/* 
    HELPER: Generate 6-digit OTP
-========================= */
+ */
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
 };
 
-/* =========================
+/* 
    SIGNUP WITH EMAIL OTP
-========================= */
+ */
 const signup = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -126,9 +126,9 @@ const verifyEmail = async (req, res) => {
 
 
 
-/* =========================
+/* 
    LOGIN (EMAIL MUST BE VERIFIED)
-========================= */
+ */
 const login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
