@@ -311,7 +311,7 @@ function WaiterDashboard() {
               </div>
               <div className="stat-box ordered">
                 <h3>Total Tables</h3>
-                <p className="big-number">{stats.availableTables + stats.occupiedTables}</p>
+                <p className="big-number">{stats.totalTables}</p>
               </div>
             </div>
 

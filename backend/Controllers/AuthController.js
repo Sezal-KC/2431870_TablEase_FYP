@@ -109,13 +109,13 @@ const signup = async (req, res) => {
   }
 };
 
-/* =========================
+/* 
    VERIFY EMAIL WITH OTP
-========================= */
+ */
 const verifyEmail = async (req, res) => {
   try {
     console.log("verify email function called by frontend")
-    const { email, otp } = req.body; // OTP verification now via POST body
+    const { email, otp } = req.body; // 
 
     const user = await UserModel.findOne({
       email: email.toLowerCase(),
@@ -218,9 +218,9 @@ const login = async (req, res) => {
   }
 };
 
-/* =========================
+/* 
    FORGOT PASSWORD
-========================= */
+ */
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -283,9 +283,9 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-/* =========================
+/* 
    RESET PASSWORD
-========================= */
+*/
 const resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
