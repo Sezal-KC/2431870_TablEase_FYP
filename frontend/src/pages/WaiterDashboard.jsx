@@ -29,7 +29,8 @@ function WaiterDashboard() {
     activeTables: '0/0',
     avgOrderValue: 0,
     availableTables: 0,
-    occupiedTables: 0
+    occupiedTables: 0,
+    totalTables: 0
   });
   const [recentOrders, setRecentOrders] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -64,7 +65,16 @@ function WaiterDashboard() {
       const res = await axios.get(`${API}/api/tables`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setTables(res.data.data || []);
+      
+      const tableData = res.data.data || [];
+      setTables(tableData);
+
+      // Dynamically update totalTables in your stats whenever tables are loaded
+      setStats(prev => ({
+        ...prev,
+        totalTables: res.data.count || tableData.length 
+      }));
+
     } catch (err) {
       console.error('Fetch tables error:', err);
       setTableError('Failed to load tables. Please try again.');
@@ -312,6 +322,7 @@ function WaiterDashboard() {
               <div className="stat-box ordered">
                 <h3>Total Tables</h3>
                 <p className="big-number">{stats.totalTables}</p>
+                {/* <p className="big-number">"Aayush"</p> */}
               </div>
             </div>
 

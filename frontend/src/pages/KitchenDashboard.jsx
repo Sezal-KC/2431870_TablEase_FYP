@@ -6,26 +6,33 @@ import { io } from 'socket.io-client';
 import '../css/kitchen-dashboard.css';
 import logo from '../assets/logo.jpg';
 import { useNavigate } from 'react-router-dom';
-
-//const API = 'http://localhost:8080';
-
 import API from '../config';
 
+// Status config defines label and next action for each order status
 const STATUS_CONFIG = {
   pending: { label: 'New Order', next: 'preparing', nextLabel: 'Start Preparing' },
   preparing: { label: 'Preparing', next: 'ready', nextLabel: 'Mark All Ready' }
 };
 
 function KitchenDashboard() {
+
   const navigate = useNavigate();
+
+  // Which tab is active: orders, batch, or recipes
   const [activeTab, setActiveTab] = useState('orders');
+
+  // All active orders (pending + preparing) from backend
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Timestamp of last refresh shown in header
   const [lastRefresh, setLastRefresh] = useState(new Date());
+
+  // Consolidated batch view — items grouped by name across all tables
   const [consolidated, setConsolidated] = useState([]);
   const [loadingConsolidated, setLoadingConsolidated] = useState(false);
 
-  // Recipe states
+  // Recipe tab states
   const [menuItems, setMenuItems] = useState([]);
   const [ingredients, setIngredients] = useState([]);
   const [recipes, setRecipes] = useState([]);
@@ -34,16 +41,17 @@ function KitchenDashboard() {
   const [loadingRecipes, setLoadingRecipes] = useState(false);
   const [savingRecipe, setSavingRecipe] = useState(false);
 
+  // JWT auth header used in all API requests
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
-  // ── Orders ──────────────────────────────────────────────────────
+  // Fetches all active orders (pending + preparing) from backend
+  // Also refreshes batch view if currently on batch tab
   const fetchOrders = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/api/orders/active`, { headers });
       setOrders(res.data.data || []);
       setLastRefresh(new Date());
-      // Also refresh batch if on batch tab
       if (activeTab === 'batch') fetchConsolidated();
     } catch (err) {
       handleError('Failed to fetch orders');
@@ -52,6 +60,7 @@ function KitchenDashboard() {
     }
   }, [activeTab]);
 
+  // Fetches consolidated batch view — groups same items across all active orders
   const fetchConsolidated = async () => {
     setLoadingConsolidated(true);
     try {
@@ -64,7 +73,7 @@ function KitchenDashboard() {
     }
   };
 
-  // Socket.io for real-time order updates
+  // Socket.io — listens for real-time order events and refreshes orders automatically
   useEffect(() => {
     const socket = io(API);
 
@@ -82,18 +91,21 @@ function KitchenDashboard() {
     };
   }, [fetchOrders]);
 
+  // Fetches orders on mount and sets auto-refresh every 30 seconds
   useEffect(() => {
     fetchOrders();
     const interval = setInterval(fetchOrders, 30000);
     return () => clearInterval(interval);
   }, [fetchOrders]);
 
+  // Fetches relevant data when tab changes
   useEffect(() => {
     if (activeTab === 'batch') fetchConsolidated();
     if (activeTab === 'recipes') fetchRecipeData();
   }, [activeTab]);
 
-  // ── Recipes ─────────────────────────────────────────────────────
+  // Fetches menu items, ingredients, and recipes for the recipes tab
+  // All three are loaded in parallel using Promise.all for efficiency
   const fetchRecipeData = async () => {
     setLoadingRecipes(true);
     try {
@@ -112,6 +124,7 @@ function KitchenDashboard() {
     }
   };
 
+  // When a menu item is selected in recipes tab, load its existing recipe if available
   const handleSelectMenuItem = async (item) => {
     setSelectedMenuItem(item);
     const existing = recipes.find(r => r.menuItem?._id === item._id);
@@ -129,6 +142,7 @@ function KitchenDashboard() {
     }
   };
 
+  // Adds a blank ingredient row to the recipe builder
   const addIngredientRow = () => {
     setRecipeIngredients(prev => [...prev, {
       ingredientId: '', name: '', searchTerm: '',
@@ -136,6 +150,7 @@ function KitchenDashboard() {
     }]);
   };
 
+  // Updates a specific field in a recipe ingredient row by index
   const updateIngredientRow = (index, field, value) => {
     setRecipeIngredients(prev => {
       const updated = [...prev];
@@ -144,15 +159,20 @@ function KitchenDashboard() {
     });
   };
 
+  // Removes an ingredient row from the recipe builder by index
   const removeIngredientRow = (index) => {
     setRecipeIngredients(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Saves the recipe for the selected menu item
+  // Creates or updates the recipe via POST (backend uses upsert)
   const handleSaveRecipe = async () => {
     if (!selectedMenuItem) return handleError('Select a menu item first');
     if (recipeIngredients.length === 0) return handleError('Add at least one ingredient');
+
     const hasEmpty = recipeIngredients.some(i => !i.ingredientId || !i.quantity);
     if (hasEmpty) return handleError('Select an ingredient and enter quantity for all rows');
+
     setSavingRecipe(true);
     try {
       await axios.post(`${API}/api/inventory/recipes`, {
@@ -172,6 +192,7 @@ function KitchenDashboard() {
     }
   };
 
+  // Deletes a recipe for a menu item after confirmation
   const handleDeleteRecipe = async (menuItemId, name) => {
     if (!window.confirm(`Delete recipe for "${name}"?`)) return;
     try {
@@ -187,6 +208,8 @@ function KitchenDashboard() {
     }
   };
 
+  // Updates order status — pending → preparing or preparing → ready
+  // Refreshes both orders and batch view after status change
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       await axios.patch(`${API}/api/orders/${orderId}/status`, { status: newStatus }, { headers });
@@ -198,6 +221,8 @@ function KitchenDashboard() {
     }
   };
 
+  // Marks a single item as ready within an order
+  // Only works if order is in preparing status (validated on backend)
   const handleItemReady = async (orderId, itemName) => {
     try {
       await axios.patch(`${API}/api/orders/${orderId}/item-ready`, { itemName }, { headers });
@@ -206,10 +231,12 @@ function KitchenDashboard() {
       fetchConsolidated();
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to mark item ready';
-      handleError(msg); // ← shows "Please click Start Preparing for Table X first"
+      handleError(msg);
     }
   };
 
+  // Marks an item ready for ALL tables at once from the batch view
+  // Automatically starts preparing for any tables still in pending status
   const handleItemReadyAll = async (itemName) => {
     try {
       const res = await axios.patch(`${API}/api/orders/item-ready-all`, { itemName }, { headers });
@@ -222,11 +249,13 @@ function KitchenDashboard() {
     }
   };
 
+  // Clears auth and redirects to login
   const handleLogout = () => {
     localStorage.clear();
     navigate('/login', { replace: true });
   };
 
+  // Returns human-readable elapsed time since order was placed
   const getElapsedTime = (createdAt) => {
     const diff = Math.floor((new Date() - new Date(createdAt)) / 1000 / 60);
     if (diff < 1) return 'Just now';
@@ -234,22 +263,34 @@ function KitchenDashboard() {
     return `${diff} mins ago`;
   };
 
+  // Split orders into pending (new) and preparing columns
   const pendingOrders = orders.filter(o => o.status === 'pending');
   const preparingOrders = orders.filter(o => o.status === 'preparing');
+
+  // Check if a menu item already has a recipe set
   const hasRecipe = (itemId) => recipes.some(r => r.menuItem?._id === itemId);
 
   return (
     <div className="kitchen-layout">
-      {/* Header */}
+
+      {/* Header — logo, order counts, tab buttons, logout */}
       <header className="kitchen-header">
         <div className="kitchen-brand">
-          <img src={logo} alt="TablEase" className="kitchen-logo" onError={e => { e.target.style.display='none'; }} />
+          <img
+            src={logo}
+            alt="TablEase"
+            className="kitchen-logo"
+            onError={e => { e.target.style.display = 'none'; }}
+          />
           <div>
             <h1>Kitchen Display</h1>
             <p>Welcome, {localStorage.getItem('loggedInUser') || 'Kitchen Staff'}</p>
           </div>
         </div>
+
         <div className="kitchen-header-right">
+
+          {/* Order count badges — only shown on Orders tab */}
           {activeTab === 'orders' && (
             <>
               <div className="order-counts">
@@ -262,24 +303,38 @@ function KitchenDashboard() {
               <p className="last-refresh">Updated: {lastRefresh.toLocaleTimeString()}</p>
             </>
           )}
+
+          {/* Tab switcher — Orders, Batch, Recipes */}
           <div className="kitchen-tabs">
-            <button className={`kitchen-tab-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
+            <button
+              className={`kitchen-tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
+              onClick={() => setActiveTab('orders')}
+            >
               Orders
             </button>
-            <button className={`kitchen-tab-btn ${activeTab === 'batch' ? 'active' : ''}`} onClick={() => setActiveTab('batch')}>
+            <button
+              className={`kitchen-tab-btn ${activeTab === 'batch' ? 'active' : ''}`}
+              onClick={() => setActiveTab('batch')}
+            >
               <MdTableRestaurant size={16} /> Batch
             </button>
-            <button className={`kitchen-tab-btn ${activeTab === 'recipes' ? 'active' : ''}`} onClick={() => setActiveTab('recipes')}>
+            <button
+              className={`kitchen-tab-btn ${activeTab === 'recipes' ? 'active' : ''}`}
+              onClick={() => setActiveTab('recipes')}
+            >
               <MdBook size={16} /> Recipes
             </button>
           </div>
+
           <button className="logout-btn" onClick={handleLogout}>
             <MdLogout size={18} /> Logout
           </button>
+
         </div>
       </header>
 
-      {/* ORDERS TAB */}
+      {/* Orders Tab */}
+      {/* Two columns: New Orders (pending) on left, Preparing on right */}
       {activeTab === 'orders' && (
         <main className="kitchen-main">
           {loading ? (
@@ -292,6 +347,8 @@ function KitchenDashboard() {
             </div>
           ) : (
             <div className="kitchen-columns">
+
+              {/* Left column — New Orders (pending) */}
               <div className="kitchen-column">
                 <div className="column-header pending-header">
                   <h2>🔴 New Orders</h2>
@@ -313,6 +370,8 @@ function KitchenDashboard() {
                   )}
                 </div>
               </div>
+
+              {/* Right column — Preparing */}
               <div className="kitchen-column">
                 <div className="column-header preparing-header">
                   <h2>🟡 Preparing</h2>
@@ -334,21 +393,25 @@ function KitchenDashboard() {
                   )}
                 </div>
               </div>
+
             </div>
           )}
         </main>
       )}
 
-      {/* BATCH TAB */}
+      {/* Batch Tab */}
+      {/* Shows all pending/preparing items grouped by item name across all tables */}
       {activeTab === 'batch' && (
         <main className="kitchen-main">
+
           <div className="batch-header">
             <h2>Batch Preparation View</h2>
-            <p>All pending items grouped together — prepare same items at once</p>
+            <p>All pending items grouped together to prepare same items at once</p>
             <button className="refresh-btn" onClick={fetchConsolidated}>
               <MdRefresh size={18} /> Refresh
             </button>
           </div>
+
           {loadingConsolidated ? (
             <div className="kitchen-loading">Loading batch view...</div>
           ) : consolidated.length === 0 ? (
@@ -361,12 +424,15 @@ function KitchenDashboard() {
             <div className="batch-grid">
               {consolidated.map((item, i) => (
                 <div key={i} className="batch-card">
+
+                  {/* Item name and total quantity across all tables */}
                   <div className="batch-card-top">
                     <span className="batch-item-name">{item.name}</span>
                     <span className="batch-total-qty">{item.totalQty} total</span>
                   </div>
 
-                  {/* Mark All Ready button */}
+                  {/* Mark All Ready — marks this item ready for all tables at once */}
+                  {/* Auto-starts preparing for any tables still pending */}
                   <button
                     className="batch-all-ready-btn"
                     onClick={() => handleItemReadyAll(item.name)}
@@ -374,6 +440,7 @@ function KitchenDashboard() {
                     ✓ Mark All Ready ({item.tables.length} tables)
                   </button>
 
+                  {/* Individual table rows — mark ready per table */}
                   <div className="batch-tables">
                     {item.tables.map((t, j) => (
                       <div key={j} className="batch-table-row">
@@ -391,6 +458,7 @@ function KitchenDashboard() {
                       </div>
                     ))}
                   </div>
+
                 </div>
               ))}
             </div>
@@ -398,13 +466,16 @@ function KitchenDashboard() {
         </main>
       )}
 
-      {/* RECIPES TAB */}
+      {/* Recipes Tab */}
+      {/* Left: menu item list | Right: recipe builder for selected item */}
       {activeTab === 'recipes' && (
         <main className="kitchen-main">
           {loadingRecipes ? (
             <div className="kitchen-loading">Loading recipes...</div>
           ) : (
             <div className="recipes-layout">
+
+              {/* Left — list of all menu items with recipe status badges */}
               <div className="recipes-menu-list">
                 <h2>Menu Items</h2>
                 <p className="recipes-hint">Select a dish to set its recipe</p>
@@ -424,8 +495,13 @@ function KitchenDashboard() {
                           ? <span className="recipe-badge has-recipe">✅ Recipe Set</span>
                           : <span className="recipe-badge no-recipe">⚠️ No Recipe</span>}
                         {hasRecipe(item._id) && (
-                          <button className="btn-delete-recipe"
-                            onClick={e => { e.stopPropagation(); handleDeleteRecipe(item._id, item.name); }}>
+                          <button
+                            className="btn-delete-recipe"
+                            onClick={e => {
+                              e.stopPropagation();
+                              handleDeleteRecipe(item._id, item.name);
+                            }}
+                          >
                             <MdDelete size={14} />
                           </button>
                         )}
@@ -434,6 +510,8 @@ function KitchenDashboard() {
                   ))}
                 </div>
               </div>
+
+              {/* Right — recipe builder for selected menu item */}
               <div className="recipe-builder">
                 {!selectedMenuItem ? (
                   <div className="recipe-empty">
@@ -446,10 +524,15 @@ function KitchenDashboard() {
                       <h2>Recipe for: <span>{selectedMenuItem.name}</span></h2>
                       <p>Define ingredients needed for one serving</p>
                     </div>
+
+                    {/* Ingredient rows — each row has search, quantity and unit */}
                     <div className="recipe-ingredients">
                       {recipeIngredients.length === 0 && (
-                        <p className="recipe-no-ingredients">No ingredients added yet. Click below to add.</p>
+                        <p className="recipe-no-ingredients">
+                          No ingredients added yet. Click below to add.
+                        </p>
                       )}
+
                       {recipeIngredients.map((row, index) => {
                         const filtered = ingredients.filter(i =>
                           i.name.toLowerCase().includes(row.searchTerm?.toLowerCase() || '')
@@ -457,8 +540,11 @@ function KitchenDashboard() {
                         const exactMatch = ingredients.find(
                           i => i.name.toLowerCase() === row.searchTerm?.toLowerCase()
                         );
+
                         return (
                           <div key={index} className="recipe-ingredient-row">
+
+                            {/* Ingredient search with dropdown — can create new if not found */}
                             <div className="ingredient-search-wrap">
                               <input
                                 type="text"
@@ -469,22 +555,29 @@ function KitchenDashboard() {
                                 placeholder="Search ingredient..."
                                 className={row.ingredientId ? 'selected-ingredient' : ''}
                               />
+
                               {row.showDropdown && row.searchTerm && (
                                 <div className="ingredient-dropdown">
                                   {filtered.map(ing => (
-                                    <div key={ing._id} className="ingredient-option"
+                                    <div
+                                      key={ing._id}
+                                      className="ingredient-option"
                                       onMouseDown={() => {
                                         updateIngredientRow(index, 'ingredientId', ing._id);
                                         updateIngredientRow(index, 'name', ing.name);
                                         updateIngredientRow(index, 'searchTerm', ing.name);
                                         updateIngredientRow(index, 'unit', ing.unit);
                                         updateIngredientRow(index, 'showDropdown', false);
-                                      }}>
+                                      }}
+                                    >
                                       {ing.name} <span className="ing-unit">({ing.unit})</span>
                                     </div>
                                   ))}
+
+                                  {/* Create new ingredient if no exact match found */}
                                   {!exactMatch && row.searchTerm.trim() && (
-                                    <div className="ingredient-option create-new"
+                                    <div
+                                      className="ingredient-option create-new"
                                       onMouseDown={async () => {
                                         try {
                                           const res = await axios.post(`${API}/api/inventory/ingredients`, {
@@ -501,69 +594,109 @@ function KitchenDashboard() {
                                           updateIngredientRow(index, 'name', newIng.name);
                                           updateIngredientRow(index, 'searchTerm', newIng.name);
                                           updateIngredientRow(index, 'showDropdown', false);
-                                        } catch { handleError('Failed to create ingredient'); }
-                                      }}>
+                                        } catch {
+                                          handleError('Failed to create ingredient');
+                                        }
+                                      }}
+                                    >
                                       ➕ Create "{row.searchTerm.trim()}"
                                     </div>
                                   )}
                                 </div>
                               )}
                             </div>
-                            <input type="number" value={row.quantity}
+
+                            {/* Quantity input */}
+                            <input
+                              type="number"
+                              value={row.quantity}
                               onChange={e => updateIngredientRow(index, 'quantity', e.target.value)}
-                              placeholder="Qty" min="0" />
-                            <select value={row.unit}
-                              onChange={e => updateIngredientRow(index, 'unit', e.target.value)}>
+                              placeholder="Qty"
+                              min="0"
+                            />
+
+                            {/* Unit selector */}
+                            <select
+                              value={row.unit}
+                              onChange={e => updateIngredientRow(index, 'unit', e.target.value)}
+                            >
                               {['kg', 'g', 'liter', 'ml', 'pcs'].map(u => (
                                 <option key={u} value={u}>{u}</option>
                               ))}
                             </select>
-                            <button className="btn-remove-ingredient" onClick={() => removeIngredientRow(index)}>
+
+                            {/* Remove this ingredient row */}
+                            <button
+                              className="btn-remove-ingredient"
+                              onClick={() => removeIngredientRow(index)}
+                            >
                               <MdDelete size={16} />
                             </button>
+
                           </div>
                         );
                       })}
                     </div>
+
+                    {/* Add new ingredient row button */}
                     <button className="btn-add-ingredient" onClick={addIngredientRow}>
                       <MdAdd size={16} /> Add Ingredient
                     </button>
-                    <button className="btn-save-recipe" onClick={handleSaveRecipe} disabled={savingRecipe}>
+
+                    {/* Save recipe button */}
+                    <button
+                      className="btn-save-recipe"
+                      onClick={handleSaveRecipe}
+                      disabled={savingRecipe}
+                    >
                       {savingRecipe ? 'Saving...' : '💾 Save Recipe'}
                     </button>
                   </>
                 )}
               </div>
+
             </div>
           )}
         </main>
       )}
+
     </div>
   );
 }
 
+// OrderCard component — renders a single order card in the orders tab
+// Shows items, allergies, notes and action button (Start Preparing or Mark All Ready)
 function OrderCard({ order, onStatusUpdate, onItemReady, getElapsedTime }) {
   const config = STATUS_CONFIG[order.status];
   const tableNum = order.table?.tableNumber || 'Unknown';
   if (!config) return null;
 
+  // Only show new items (isNew: true) when order is pending
+  // Show all items when order is preparing
   const visibleItems = order.items.filter(item =>
     order.status === 'pending' ? item.isNew !== false : true
   );
 
   return (
     <div className={`order-card ${order.status}`}>
+
+      {/* Card header — table number and elapsed time */}
       <div className="order-card-header">
         <div className="order-table">Table {tableNum}</div>
         <div className="order-time">{getElapsedTime(order.createdAt)}</div>
       </div>
+
+      {/* Status bar — shows current status label */}
       <div className="order-status-bar">{config.label}</div>
 
+      {/* Items list — shows ✓ Ready button per item when preparing */}
       <div className="order-items">
         {visibleItems.map((item, i) => (
           <div key={i} className={`order-item ${item.isReady ? 'item-ready' : ''}`}>
             <span className="order-item-qty">x{item.qty}</span>
             <span className="order-item-name">{item.name}</span>
+
+            {/* Show Ready button only for unready items in preparing status */}
             {order.status === 'preparing' && !item.isReady && (
               <button
                 className="item-ready-btn"
@@ -572,6 +705,8 @@ function OrderCard({ order, onStatusUpdate, onItemReady, getElapsedTime }) {
                 ✓ Ready
               </button>
             )}
+
+            {/* Show checkmark badge when item is already marked ready */}
             {item.isReady && (
               <span className="item-ready-badge">✅ Ready</span>
             )}
@@ -579,6 +714,7 @@ function OrderCard({ order, onStatusUpdate, onItemReady, getElapsedTime }) {
         ))}
       </div>
 
+      {/* Allergy warning — shown if order has any allergies */}
       {order.allergies && order.allergies.length > 0 && (
         <div className="order-allergies">
           <span className="allergy-label">⚠️ Allergies:</span>
@@ -587,14 +723,20 @@ function OrderCard({ order, onStatusUpdate, onItemReady, getElapsedTime }) {
           ))}
         </div>
       )}
-      {order.notes && <div className="order-notes">📝 {order.notes}</div>}
 
+      {/* Special notes from waiter */}
+      {order.notes && (
+        <div className="order-notes">📝 {order.notes}</div>
+      )}
+
+      {/* Main action button — Start Preparing or Mark All Ready */}
       <button
         className={`action-btn ${order.status}`}
         onClick={() => onStatusUpdate(order._id, config.next)}
       >
         {config.nextLabel}
       </button>
+
     </div>
   );
 }

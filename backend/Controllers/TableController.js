@@ -6,9 +6,11 @@ const Table = require('../Models/Table');
 const getAllTables = async (req, res) => {
   try {
     const tables = await Table.find().sort({ tableNumber: 1 });
+    const totalTables = await Table.countDocuments();
     res.status(200).json({
       success: true,
-      data: tables
+      data: tables,
+      count: totalTables,
     });
   } catch (error) {
     console.error('Get tables error:', error);
@@ -22,3 +24,4 @@ const getAllTables = async (req, res) => {
 module.exports = {
   getAllTables
 };
+

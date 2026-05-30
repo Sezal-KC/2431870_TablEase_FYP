@@ -137,10 +137,7 @@ function ManagerDashboard() {
   };
 
   // Handles restock with automatic unit conversion
-  // kg → g : multiply by 1000
-  // liter → ml : multiply by 1000
-  // g → kg : divide by 1000
-  // ml → liter : divide by 1000
+
   const handleRestock = async () => {
     if (!restockQty || parseFloat(restockQty) <= 0) {
       return handleError('Enter a valid quantity');

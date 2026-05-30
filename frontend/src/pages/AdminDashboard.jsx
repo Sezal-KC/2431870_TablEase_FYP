@@ -18,10 +18,10 @@ function AdminDashboard() {
 
   const navigate = useNavigate();
 
-  // ── Active tab state ─────────────────────────────────────────────
+  // ── Active tab state 
   const [activeTab, setActiveTab] = useState('menu');
 
-  // ── Data states ──────────────────────────────────────────────────
+  // ── Data states
   const [menuItems, setMenuItems] = useState([]);
   const [users, setUsers] = useState([]);
   const [ingredients, setIngredients] = useState([]);
@@ -67,11 +67,11 @@ function AdminDashboard() {
     address: ''
   });
 
-  // ── Auth header ──────────────────────────────────────────────────
+  // ── Auth header 
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
-  // ── Constants ────────────────────────────────────────────────────
+  // ── Constants 
   const roleColors = {
     admin: '#e74c3c',
     manager: '#9b59b6',
@@ -84,7 +84,7 @@ function AdminDashboard() {
   const ingredientCategories = ['Meat', 'Vegetable', 'Spice', 'Sauce', 'Grain', 'Dairy', 'Other'];
   const units = ['kg', 'g', 'liter', 'ml', 'pcs'];
 
-  // ── Fetch data when tab changes ──────────────────────────────────
+  // ── Fetch data when tab changes 
   // Socket.io for real-time stock updates
   useEffect(() => {
     const socket = io(API);
@@ -114,8 +114,7 @@ function AdminDashboard() {
     if (activeTab === 'ingredients') fetchIngredients();
   }, [activeTab]);
 
-  // ── Fetch functions ──────────────────────────────────────────────
-
+  // ── Fetch functions 
   const fetchMenu = async () => {
     setLoadingMenu(true);
     try {
@@ -152,7 +151,7 @@ function AdminDashboard() {
     }
   };
 
-  // ── Menu handlers ────────────────────────────────────────────────
+  // ── Menu handlers 
 
   // Open blank modal for adding a new menu item
   const openAddModal = () => {
@@ -214,7 +213,7 @@ function AdminDashboard() {
     }
   };
 
-  // ── User handlers ────────────────────────────────────────────────
+  // ── User handlers
 
   // Open modal pre-filled with user data for editing
   const openEditUserModal = (user) => {
@@ -256,7 +255,7 @@ function AdminDashboard() {
     }
   };
 
-  // ── Ingredient handlers ──────────────────────────────────────────
+  // ── Ingredient handlers 
 
   // Open blank modal for adding a new ingredient
   const openAddIngredientModal = () => {
@@ -449,7 +448,7 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* ── USERS TAB ─────────────────────────────────────────── */}
+        {/* ── USERS TAB */}
         {activeTab === 'users' && (
           <div className="admin-section">
 
