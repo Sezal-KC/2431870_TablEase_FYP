@@ -7,6 +7,7 @@ import {
 } from 'react-icons/md';
 import { io } from 'socket.io-client';
 import '../css/cashier-dashboard.css';
+import React, { useState, useEffect, useRef } from 'react';
 import CryptoJS from 'crypto-js';
 import logo from '../assets/logo.jpg';
 import { useNavigate } from 'react-router-dom';
